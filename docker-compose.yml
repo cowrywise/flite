@@ -1,0 +1,34 @@
+version: '3'
+
+services:
+  postgres:
+    build:
+      context: .
+      dockerfile: ./Dockerfile-Postgres
+    image: postgres
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: flite
+      POSTGRES_USER: postgres
+    ports:
+      - "5432:5432"
+
+  django:
+    restart: always
+    environment:
+      - DJANGO_SECRET_KEY=local
+    image: django
+    container_name: django
+    build: ./
+    command: >
+      bash -c "python wait_for_postgres.py &&
+               ./manage.py migrate &&
+               ./manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres

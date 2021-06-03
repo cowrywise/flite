@@ -1,0 +1,42 @@
+name: CI
+
+# Enable Buildkit and let compose use it to speed up image building
+env:
+  DOCKER_BUILDKIT: 1
+  COMPOSE_DOCKER_CLI_BUILD: 1
+
+on:
+  pull_request:
+    branches: [ "master", "main" ]
+
+  push:
+    branches: [ "master", "main" ]
+
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Code Repository
+        uses: actions/checkout@v2
+
+      - name: Build the Stack
+        run:  docker-compose up -d
+
+      - name: Sleep for 15 seconds
+        uses: jakejarvis/wait-action@master
+        with:
+          time: '5s'
+
+      - name: Run DB Migrations
+        run:  docker-compose run --rm django python manage.py migrate
+
+      - name: Run Django Tests
+        run:  docker-compose run django python manage.py test
+
+      - name: Tear down the Stack
+        run:  docker-compose down
+
+
