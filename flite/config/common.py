@@ -29,6 +29,7 @@ class Common(Configuration):
         'drf_yasg',                   # for API documentation using Swagger
 
         # Your apps
+        'flite.account',
         'flite.users',
         'flite.core',
 

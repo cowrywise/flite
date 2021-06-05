@@ -21,6 +21,10 @@ restart:
 
 start:
 	docker-compose start
+
+makemigrations:
+	docker-compose run django sh -c 'python manage.py makemigrations'
+	
 	
 migrate:
 	docker-compose run django sh -c 'python manage.py migrate'
