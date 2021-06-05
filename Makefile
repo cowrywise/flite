@@ -23,19 +23,18 @@ start:
 	docker-compose start
 	
 migrate:
-	docker-compose run server sh -c 'aerich migrate'
+	docker-compose run django sh -c 'aerich migrate'
 
 
 logs:
-	docker-compose logs server | tail -100
+	docker-compose logs django | tail -100
 
 
 flake8:
-	docker-compose run server sh -c 'flake8'
-
-coverage:
-	docker-compose run server sh -c 'coverage run -m pytest'
-
+	docker-compose run django sh -c 'flake8'
 
 report:
-	docker-compose run server sh -c 'coverage report'
+	docker-compose run django sh -c 'coverage report'
+
+test:
+	docker-compose run django sh -c 'python manage.py test'
