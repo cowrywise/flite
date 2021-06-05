@@ -212,3 +212,7 @@ class Common(Configuration):
             'rest_framework.authentication.TokenAuthentication',
         )
     }
+
+    SWAGGER_SETTINGS = {
+        'LOGIN_URL': '/api-auth/login/'
+    }
