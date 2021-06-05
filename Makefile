@@ -23,8 +23,13 @@ start:
 	docker-compose start
 	
 migrate:
-	docker-compose run django sh -c 'aerich migrate'
+	docker-compose run django sh -c 'python manage.py migrate'
 
+collectstatic:
+	docker-compose run django sh -c 'python manage.py collectstatic'
+
+createsuperuser:
+	docker-compose run django sh -c 'python manage.py createsuperuser'
 
 logs:
 	docker-compose logs django | tail -100
