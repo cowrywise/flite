@@ -1,5 +1,5 @@
 # Flite
-Main => ![example workflow](https://github.com/iamr0b0tx/flite/actions/workflows/django.yml/badge.svg) <br>
+Main => ![example workflow](https://github.com/iamr0b0tx/flite/actions/workflows/ci.yml/badge.svg) <br>
 
 # Setup and Installation
 ## Prerequisites
