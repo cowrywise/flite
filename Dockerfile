@@ -3,7 +3,8 @@ ENV PYTHONUNBUFFERED 1
 
 # Allows docker to cache installed dependencies between builds
 COPY ./requirements.txt requirements.txt
-RUN pip install -r requirements.txt
+# RUN pip install -r requirements.txt
+RUN cat requirements.txt | xargs -n 1 pip install
 
 # Adds our application code to the image
 COPY . code
