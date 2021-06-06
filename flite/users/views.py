@@ -3,8 +3,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from .models import User, NewUserPhoneVerification
 from .permissions import IsUserOrReadOnly
-from .serializers import CreateUserSerializer, UserSerializer, SendNewPhonenumberSerializer
-from rest_framework.views import APIView
+from .serializers import CreateUserSerializer, UserSerializer, SendNewPhoneNumberSerializer
 from . import utils
 
 
@@ -19,8 +18,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
     permission_classes = (IsUserOrReadOnly,)
 
 
-class UserCreateViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
-                        viewsets.GenericViewSet):
+class UserCreateAndListViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
+                               viewsets.GenericViewSet):
     """
     Creates and List user accounts
     """
@@ -29,29 +28,30 @@ class UserCreateViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
     permission_classes = (AllowAny,)
 
 
-class SendNewPhonenumberVerifyViewSet(mixins.CreateModelMixin,mixins.UpdateModelMixin, viewsets.GenericViewSet):
+class SendNewPhoneNumberVerifyViewSet(mixins.CreateModelMixin,
+                                      mixins.UpdateModelMixin,
+                                      viewsets.GenericViewSet):
     """
     Sending of verification code
     """
     queryset = NewUserPhoneVerification.objects.all()
-    serializer_class = SendNewPhonenumberSerializer
+    serializer_class = SendNewPhoneNumberSerializer
     permission_classes = (AllowAny,)
 
-
-    def update(self, request, pk=None,**kwargs):
+    def update(self, request, pk=None, **kwargs):
         verification_object = self.get_object()
         code = request.data.get("code")
 
         if code is None:
-            return Response({"message":"Request not successful"}, 400)    
+            return Response({"message": "Request not successful"}, 400)
 
         if verification_object.verification_code != code:
-            return Response({"message":"Verification code is incorrect"}, 400)    
+            return Response({"message": "Verification code is incorrect"}, 400)
 
         code_status, msg = utils.validate_mobile_signup_sms(verification_object.phone_number, code)
-        
+
         content = {
-                'verification_code_status': str(code_status),
-                'message': msg,
+            'verification_code_status': str(code_status),
+            'message': msg,
         }
-        return Response(content, 200)    
+        return Response(content, 200)
