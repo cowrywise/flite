@@ -7,6 +7,7 @@ from .serializers import CreateUserSerializer, UserSerializer, SendNewPhonenumbe
 from rest_framework.views import APIView
 from . import utils
 
+
 class UserViewSet(mixins.RetrieveModelMixin,
                   mixins.UpdateModelMixin,
                   viewsets.GenericViewSet):
@@ -18,10 +19,10 @@ class UserViewSet(mixins.RetrieveModelMixin,
     permission_classes = (IsUserOrReadOnly,)
 
 
-class UserCreateViewSet(mixins.CreateModelMixin,
+class UserCreateViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
                         viewsets.GenericViewSet):
     """
-    Creates user accounts
+    Creates and List user accounts
     """
     queryset = User.objects.all()
     serializer_class = CreateUserSerializer
