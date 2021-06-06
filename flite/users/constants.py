@@ -1,0 +1,38 @@
+SAVINGS = 'SAVINGS'
+CURRENT = 'CURRENT'
+FIXED = 'FIXED'
+
+ACCOUNT_TYPES = (
+    (FIXED, 'Fixed'),
+    (CURRENT, 'Current'),
+    (SAVINGS, 'Savings'),
+)
+
+
+CREDIT = 'CREDIT'
+DEBIT = 'DEBIT'
+
+TRANSACTION_TYPES = (
+    (CREDIT, 'Credit'),
+    (DEBIT, 'Debit'),
+)
+
+PENDING = 'PENDING'
+APPROVED = 'APPROVED'
+CANCLED = 'CANCLED'
+
+TRANSACTION_STATUS = (
+    (PENDING, 'Pending'),
+    (APPROVED, 'Approved'),
+    (CANCLED, 'Cancled'),
+)
+
+WITHDRAWAL = 'WITHDRAWAL'
+DEPOSIT = 'DEPOSIT'
+TRANSFER = 'TRANSFER'
+
+TRANSACTION_ACTIONS = (
+    (WITHDRAWAL, 'Withdrawal'),
+    (DEPOSIT, 'Deposit'),
+    (TRANSFER, 'Transfer'),
+)

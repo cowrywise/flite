@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, NewUserPhoneVerification,UserProfile,Referral
+from .models import User, UserProfile, Referral, Account, Transaction
 from . import utils
 
 class UserSerializer(serializers.ModelSerializer):
@@ -49,24 +49,45 @@ class CreateUserSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
 
-
-class SendNewPhonenumberSerializer(serializers.ModelSerializer):
-
-    def create(self, validated_data):
-        phone_number = validated_data.get("phone_number", None) 
-        email = validated_data.get("email", None)
-
-        obj, code = utils.send_mobile_signup_sms(phone_number, email)
-        
-        return {
-            "verification_code":code,
-            "id":obj.id
-        }
-
+class AccountSerializer(serializers.ModelSerializer):
     class Meta:
-        model = NewUserPhoneVerification
-        fields = ('id', 'phone_number', 'verification_code', 'email',)
-        extra_kwargs = {'phone_number': {'write_only': True, 'required':True}, 'email': {'write_only': True}, }
-        read_only_fields = ('id', 'verification_code')
-        
-    
+        model = Account
+        fields = "__all__"
+
+
+class WithdrawalDepositSerializer(serializers.Serializer):
+    account_number = serializers.CharField()
+    amount = serializers.DecimalField(max_digits=1000_000, decimal_places=2)
+
+    def validated_amount(self, amount):
+        if amount < 50:
+            raise serializers.ValidationError(
+                "Amount specified for deposit is less than the minimum required amount of #50"
+            )
+        return amount
+
+    def validate_account_number(self, account_number):
+        account_exists = Account.objects.filter(account_number=account_number).exists()
+        if account_exists:
+            return account_number
+        else:
+            raise serializers.ValidationError(
+                "Account number '%s' specified for this user does not exist, please ensure you specify account that belongs to this user only" % account_number
+            )
+
+
+class TransferSerializer(serializers.Serializer):
+    amount = serializers.DecimalField(max_digits=1000_000, decimal_places=2)
+
+    def validated_amount(self, amount):
+        if amount < 50:
+            raise serializers.ValidationError(
+                "Amount specified for transfer is less than the minimum required amount of #50"
+            )
+        return amount
+
+
+class TransactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transaction
+        fields = '__all__'
