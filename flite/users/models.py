@@ -9,6 +9,8 @@ from rest_framework.authtoken.models import Token
 from flite.core.models import BaseModel
 from phonenumber_field.modelfields import PhoneNumberField
 from django.utils import timezone
+from flite.core.utils import transaction_type
+
 
 @python_2_unicode_compatible
 class User(AbstractUser):
@@ -113,14 +115,22 @@ class Bank(models.Model):
     account_name = models.CharField(max_length=100)
     account_number = models.CharField(max_length=50)
     account_type = models.CharField(max_length=50)
+
+    def __str__(self) -> str:
+        return f'{self.bank}'
     
+
 class Transaction(BaseModel):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='transaction')
     reference = models.CharField(max_length=200)
     status = models.CharField(max_length=200)
     amount = models.FloatField(default=0.0)
     new_balance = models.FloatField(default=0.0)
+    transaction_type = models.CharField(max_length=15, choices=transaction_type(), 
+    help_text="mode of transaction", null=True)
 
+    def __str__(self) -> str:
+        return f'{self.transaction_type}'
 
 
 class BankTransfer(Transaction):
@@ -136,7 +146,6 @@ class P2PTransfer(Transaction):
 
     class Meta:
         verbose_name_plural = "P2P Transfers"
-
 
 
 class Card(models.Model):
@@ -164,6 +173,3 @@ class Card(models.Model):
         self.is_active = False
         self.is_deleted = True
         self.save()
-
-
-    

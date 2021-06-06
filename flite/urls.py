@@ -5,11 +5,37 @@ from django.contrib import admin
 from django.views.generic.base import RedirectView
 from rest_framework.routers import DefaultRouter
 from rest_framework.authtoken import views
-from .users.views import UserViewSet, UserCreateViewSet, SendNewPhonenumberVerifyViewSet
+from .users.views import (
+    UserViewSet,
+    UserCreateViewSet,
+    SendNewPhonenumberVerifyViewSet)
+from flite.core.views import (
+    DepositsViewSet,
+    WithdrawalsViewSet,
+    P2PTransferViewSet,
+    TransactionListViewSet,
+    RetrieveTransactionViewSet)
+
+
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
 router.register(r'users', UserCreateViewSet)
 router.register(r'phone', SendNewPhonenumberVerifyViewSet)
+router.register(r'users/(?P<user_id>[0-9A-Za-z\-]+)/deposits',
+    DepositsViewSet,
+    basename='deposits')
+router.register(r'users/(?P<user_id>[0-9A-Za-z\-]+)/withdrawals',
+    WithdrawalsViewSet,
+    basename='withdrawals')
+router.register(r'account/(?P<sender_account_id>[0-9A-Za-z\-]+)/withdrawals/(?P<recipient_account_id>[0-9A-Za-z\-]+)',
+    P2PTransferViewSet,
+    basename='P2PTransfer')
+router.register(r'account/(?P<account_id>[0-9A-Za-z\-]+)/transactions',
+    TransactionListViewSet,
+    basename='transaction')
+router.register(r'account/(?P<account_id>[0-9A-Za-z\-]+)/transactions/(?P<transaction_id>[0-9A-Za-z\-]+)',
+    RetrieveTransactionViewSet,
+    basename='single-transactions')
 
 
 urlpatterns = [
@@ -24,4 +50,3 @@ urlpatterns = [
     re_path(r'^$', RedirectView.as_view(url=reverse_lazy('api-root'), permanent=False)),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
