@@ -102,7 +102,6 @@ venv.bak/
 
 # django staticfiles
 /static
-
 # mypy
 .mypy_cache/
 .vscode/
