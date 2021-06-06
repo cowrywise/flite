@@ -9,7 +9,7 @@ config = {
     "dbname": os.getenv("POSTGRES_DB", "postgres"),
     "user": os.getenv("POSTGRES_USER", "postgres"),
     "password": os.getenv("POSTGRES_PASSWORD", "postgres"),
-    "host": os.getenv("DATABASE_URL", "postgres")
+    "host": os.getenv("DATABASE_URL", "flite-postgres")
 }
 
 start_time = time()
@@ -18,7 +18,7 @@ logger.setLevel(logging.INFO)
 logger.addHandler(logging.StreamHandler())
 
 
-def pg_isready(host, user, password, dbname):
+def pg_is_ready(host, user, password, dbname):
     while time() - start_time < check_timeout:
         try:
             conn = psycopg2.connect(**vars())
@@ -34,4 +34,4 @@ def pg_isready(host, user, password, dbname):
     return False
 
 
-pg_isready(**config)
+pg_is_ready(**config)
