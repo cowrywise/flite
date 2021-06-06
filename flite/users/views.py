@@ -152,7 +152,7 @@ class AccountTransactionViewSet(viewsets.GenericViewSet):
 
         return Response({
             'status': True,
-            'message': "Amount Deposited successfully",
+            'message': "Transfer was successful",
         }, 200
         )
 
