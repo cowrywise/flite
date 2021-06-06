@@ -19,6 +19,8 @@ services:
     restart: always
     environment:
       - DJANGO_SECRET_KEY=local
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/flite
+      - POSTGRES_HOST=postgres
     image: django
     container_name: django
     build: ./
