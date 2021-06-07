@@ -1,10 +1,10 @@
 from rest_framework import viewsets, mixins
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
-from .models import User, NewUserPhoneVerification
-from .permissions import IsUserOrReadOnly
-from .serializers import CreateUserSerializer, UserSerializer, SendNewPhoneNumberSerializer
-from . import utils
+from flite.users.models import User, NewUserPhoneVerification
+from flite.users.permissions import IsUserOrReadOnly
+from flite.users.serializers import CreateUserSerializer, UserSerializer, SendNewPhoneNumberSerializer
+from flite.users import utils
 
 
 class UserViewSet(mixins.RetrieveModelMixin,

@@ -4,11 +4,15 @@ from django.conf import settings
 from django.dispatch import receiver
 from django.contrib.auth.models import AbstractUser
 from django.utils.encoding import python_2_unicode_compatible
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from rest_framework.authtoken.models import Token
 from flite.core.models import BaseModel
 from phonenumber_field.modelfields import PhoneNumberField
 from django.utils import timezone
+
+from flite.users.utils import TransactionTypes, TransactionStatus, transaction_reference_generator
+
+MINIMAL_BALANCE = 0
 
 
 @python_2_unicode_compatible
@@ -87,13 +91,25 @@ class Referral(BaseModel):
 
 class Balance(BaseModel):
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
-    book_balance = models.FloatField(default=0.0)
-    available_balance = models.FloatField(default=0.0)
+    book_balance = models.DecimalField(max_digits=20, decimal_places=2, default=0.00)
+    available_balance = models.DecimalField(max_digits=20, decimal_places=2, default=0.00)
     active = models.BooleanField(default=True)
 
     class Meta:
         verbose_name = "Balance"
         verbose_name_plural = "Balances"
+
+    def can_debit(self, amount):
+        return self.available_balance > MINIMAL_BALANCE and self.available_balance >= amount
+
+    def debit(self, amount):
+        if self.can_debit(amount):
+            self.available_balance -= amount
+            self.book_balance -= amount
+
+    def credit(self, amount):
+        self.available_balance += amount
+        self.book_balance += amount
 
 
 class AllBanks(BaseModel):
@@ -119,9 +135,44 @@ class Bank(models.Model):
 class Transaction(BaseModel):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='transaction')
     reference = models.CharField(max_length=200)
-    status = models.CharField(max_length=200)
-    amount = models.FloatField(default=0.0)
-    new_balance = models.FloatField(default=0.0)
+    status = models.CharField(max_length=200,
+                              choices=TransactionStatus.choices(),
+                              default=TransactionStatus.SUCCESSFUL.value,
+                              help_text="status of transaction performed")
+    amount = models.DecimalField(max_digits=20, decimal_places=2, default=0.00)
+    transaction_type = models.CharField(max_length=100,
+                                        choices=TransactionTypes.choices(),
+                                        null=True,
+                                        blank=True,
+                                        help_text="type of transaction performed")
+    new_balance = models.DecimalField(max_digits=20, decimal_places=2, default=0.00)
+
+    class Meta:
+        ordering = ['-created']
+
+    def __str__(self):
+        return f"Transaction for {self.owner.username} and transaction type of {self.transaction_type}"
+
+    def get_customer_transaction_type_label(self):
+        return TransactionTypes(self.transaction_type).name.title()
+
+    def get_customer_transaction_status_label(self):
+        return TransactionTypes(self.status).name.title()
+
+
+@receiver(pre_save, sender=Transaction)
+def create_reference_key(sender,
+                         instance: Transaction,
+                         **kwargs):
+    """
+    pre-save a reference in Transaction
+    :param sender:
+    :param instance:
+    :param kwargs:
+    :return:
+    """
+    if not instance.reference:
+        instance.reference = transaction_reference_generator(instance)
 
 
 class BankTransfer(Transaction):

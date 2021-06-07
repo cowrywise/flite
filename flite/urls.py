@@ -5,12 +5,13 @@ from django.contrib import admin
 from django.views.generic.base import RedirectView
 from rest_framework.routers import DefaultRouter
 from rest_framework.authtoken import views
-from .users.views import UserViewSet, UserCreateAndListViewSet, SendNewPhoneNumberVerifyViewSet
+from flite.users.views import UserViewSet, UserCreateAndListViewSet, SendNewPhoneNumberVerifyViewSet, DepositViewSet
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
 router.register(r'users', UserCreateAndListViewSet)
 router.register(r'phone', SendNewPhoneNumberVerifyViewSet)
+router.register(r'users/(?P<user_id>[0-9A-Za-z\-]+)/deposits', DepositViewSet, basename='transaction-deposit')
 
 urlpatterns = [
                   path('admin/', admin.site.urls),

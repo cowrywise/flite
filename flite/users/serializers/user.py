@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from .models import User, NewUserPhoneVerification, UserProfile, Referral
-from . import utils
+from flite.users.models import User, NewUserPhoneVerification, UserProfile, Referral
+from flite.users import utils
 
 
 class UserSerializer(serializers.ModelSerializer):

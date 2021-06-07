@@ -1,5 +1,55 @@
+import random
+import string
 import uuid
+from enum import Enum
+
 from flite.users import models
+
+
+class TransactionTypes(Enum):
+    BANK_TRANSACTION = "Bank Transaction"
+    DEPOSIT = "Deposit"
+    WITHDRAW = "Withdraw"
+    PEER_TO_PEER = "Peer To Peer"
+
+    @classmethod
+    def choices(cls):
+        return [(transaction_type.value, transaction_type.name) for transaction_type in cls]
+
+
+class TransactionStatus(Enum):
+    PENDING = "Pending"
+    SUCCESSFUL = "Successful"
+    FAILED = "Failed"
+    CANCELED = "Canceled"
+
+    @classmethod
+    def choices(cls):
+        return [(status.value, status.name) for status in cls]
+
+
+def random_string_generator(size=10,
+                            chars=string.ascii_lowercase + string.digits):
+    """
+    generate a random string with a default size
+    :param size:
+    :param chars:
+    :return:
+    """
+    return ''.join(random.choice(chars) for _ in range(size))
+
+
+def transaction_reference_generator(instance):
+    """
+    This generates a transaction reference
+    """
+    reference_key = random_string_generator(size=8)
+
+    instance_class = instance.__class__
+    qs_exists = instance_class.objects.filter(reference=reference_key).exists()
+    if qs_exists:
+        return transaction_reference_generator(instance)
+    return reference_key
 
 
 def generate_new_user_passcode():
