@@ -5,13 +5,23 @@ from django.contrib import admin
 from django.views.generic.base import RedirectView
 from rest_framework.routers import DefaultRouter
 from rest_framework.authtoken import views
-from .users.views import UserViewSet, UserCreateViewSet, SendNewPhonenumberVerifyViewSet, DepositViewSet, WithdrawalViewSet, TransferViewSet
+from .users.views import (
+    UserViewSet, 
+    UserCreateViewSet, 
+    SendNewPhonenumberVerifyViewSet, 
+    DepositViewSet, 
+    WithdrawalViewSet, 
+    TransferViewSet, 
+    TransactionViewSet,
+    transaction_detail,
+)
+
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
 router.register(r'users', UserCreateViewSet)
-router.register(r'users/^(?P<user_id>)/deposits/$', DepositViewSet)
-router.register(r'users/^(?P<user_id>)/withdrawals/$', WithdrawalViewSet)
-router.register(r'account/^(?P<sender_account_id>)/transfers/^(?P<recipient_account_id>)/$', TransferViewSet)
+#router.register(r'users/^(?P<user_id>)/deposits/?$', DepositViewSet)
+#router.register(r'users/^(?P<user_id>)/withdrawals/$', WithdrawalViewSet)
+#router.register(r'account/^(?P<account_id>[a-z0-9]+)/transactions/', TransactionViewSet)
 router.register(r'phone', SendNewPhonenumberVerifyViewSet)
 
 
@@ -19,6 +29,11 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     #   path('jet_api/', include('jet_django.urls')),
     path('api/v1/', include(router.urls)),
+    path('api/v1/users/<str:user_id>/deposits/', DepositViewSet.as_view({'post': 'create'}), name="deposit"),
+    path('api/v1/users/<str:user_id>/withdrawals/', WithdrawalViewSet.as_view({'post': 'create'}), name="withdrawal"),
+    path('api/v1/account/<str:sender_account_id>/transfers/<str:receipient_account_id>', TransferViewSet.as_view({'post': 'create'}), name="transfer"),
+    path('api/v1/account/<str:account_id>/transactions/', TransactionViewSet.as_view({'get': 'list'}), name="transaction-list"),
+    path('api/v1/account/<str:account_id>/transactions/<str:pk>', transaction_detail, name="transaction-list"),
     path('api-token-auth/', views.obtain_auth_token),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 

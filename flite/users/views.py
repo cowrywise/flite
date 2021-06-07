@@ -6,6 +6,7 @@ from .models import User, NewUserPhoneVerification
 from .permissions import IsUserOrReadOnly
 from .serializers import *
 from rest_framework.views import APIView
+from rest_framework.decorators import api_view
 from . import utils
 
 class UserViewSet(mixins.RetrieveModelMixin,
@@ -18,7 +19,6 @@ class UserViewSet(mixins.RetrieveModelMixin,
     serializer_class = UserSerializer
     permission_classes = (IsUserOrReadOnly,)
 
-
 class UserCreateViewSet(mixins.CreateModelMixin,
                         viewsets.GenericViewSet):
     """
@@ -27,7 +27,6 @@ class UserCreateViewSet(mixins.CreateModelMixin,
     queryset = User.objects.all()
     serializer_class = CreateUserSerializer
     permission_classes = (AllowAny,)
-
 
 class SendNewPhonenumberVerifyViewSet(mixins.CreateModelMixin,mixins.UpdateModelMixin, viewsets.GenericViewSet):
     """
@@ -56,12 +55,12 @@ class SendNewPhonenumberVerifyViewSet(mixins.CreateModelMixin,mixins.UpdateModel
         }
         return Response(content, 200)    
 
-
 class DepositViewSet(mixins.CreateModelMixin,
                         viewsets.GenericViewSet):
     """
     ViewSet For Deposits
     """
+
     queryset = Transaction.objects.all()
     serializer_class = DepositSerializer
     permission_classes = (IsAuthenticated,)
@@ -97,6 +96,42 @@ class WithdrawalViewSet(mixins.CreateModelMixin,
             response_serializer.data, status=status.HTTP_201_CREATED, headers=headers
         )
 
+class TransactionViewSet(mixins.ListModelMixin,
+                  viewsets.GenericViewSet):
+    """
+    Updates and retrieves user accounts
+    """
+    queryset = Transaction.objects.all()
+    serializer_class = TransactionSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        queryset = super().get_queryset() 
+        return queryset.filter(owner=self.request.user)
+
+@api_view(["GET"])
+def transaction_detail(request, account_id, pk):
+    try:
+        transaction = P2PTransfer.objects.get(id=pk)
+        if transaction.owner != request.user:
+            return Response({"details": "Not Permitted"}, status.HTTP_403_FORBIDDEN)
+        serializer = P2PTransferSerializer(transaction)
+        return Response(serializer.data)
+    except P2PTransfer.DoesNotExist:
+        try:
+            transaction = Transaction.objects.get(id=pk)
+            if transaction.owner != request.user:
+                return Response({"details": "Not Permitted"}, status.HTTP_403_FORBIDDEN)
+            serializer = TransactionSerializer(transaction)
+            return Response(serializer.data)
+        except Transaction.DoesNotExist:
+            return Response({"details": "Transaction Details Not Found"}, status.HTTP_404_NOT_FOUND)
+    
+    except Exception as e:
+        print(e)
+        return Response({"details": "An Error Occurred. Try Again"}, status.HTTP_400_BAD_REQUEST)
+
+
 class TransferViewSet(mixins.CreateModelMixin,
                         viewsets.GenericViewSet):
     """
@@ -107,57 +142,67 @@ class TransferViewSet(mixins.CreateModelMixin,
     permission_classes = (IsAuthenticated,)
     http_method_names = ['post']
 
-    #def create(self, request, *args, **kwargs):
-    #  serializer = self.get_serializer(data=request.data)
-    #  serializer.is_valid(raise_exception=True)
-    #  #self.perform_create(serializer)
-    #  headers = self.get_success_headers(serializer.data)
-    #  return Response(
-    #    serializer.data, status=status.HTTP_201_CREATED, headers=headers
-    #  )
-
     def create(self, request, *args, **kwargs):
+
+        """
+        Checks if Recipient Account Exists
+        sender is the same as the user sending the request
+        removes amount from sender's account
+        adds amount to receipient's account
+        saves a P2PTransfer Object for both sender and recipient
+        returns the sender balance.
+        """
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         sender_account_id = self.kwargs.get("sender_account_id")
-        recipient_account_id = self.kwargs.get("recipient_account_id")
+        receipient_account_id = self.kwargs.get("receipient_account_id")
         sender = request.user
         try:
-            recipient = User.objects.get(id=recipient_account_id)
+            sender_from_url = User.objects.get(id=sender_account_id)
+            if sender_from_url != sender:
+                return Response({"details": "Not Permitted"}, status.HTTP_403_FORBIDDEN)
+        except User.DoesNotExist:
+            return Response({"details": "Sender Account Not Found"}, status.HTTP_404_NOT_FOUND)
+
+        try:
+            receipient = User.objects.get(id=receipient_account_id)
         except User.DoesNotExist:
             return Response({"details": "Recipient Account Not Found"}, status.HTTP_404_NOT_FOUND)
         sender_balance = Balance.objects.get(owner=sender)
-        recipient_balance = Balance.objects.get(owner=recipient)
-        #Todo: Check If The Accounts are Active
+        receipient_balance = Balance.objects.get(owner=receipient)
         amount = request.data.get("amount")
 
         #Debit The sender
         sender_balance.book_balance = F('book_balance') - amount
         sender_balance.available_balance = F('available_balance') - amount
+        sender_balance.save()
+        sender_balance.refresh_from_db()
         sender_transfer_transaction = P2PTransfer(
             sender=sender, 
-            recipient=recipient, 
+            receipient=receipient, 
             amount=amount, 
             owner=sender,
             status="success",
             new_balance=sender_balance.book_balance
         )
-        sender_balance.save()
         sender_transfer_transaction.save()
 
         #Credit The Recipient
-        recipient_balance.book_balance = F('book_balance') + amount
-        recipient_balance.available_balance = F('available_balance') + amount
-        recipient_transfer_transaction = P2PTransfer(
+        receipient_balance.book_balance = F('book_balance') + amount
+        receipient_balance.available_balance = F('available_balance') + amount
+        receipient_balance.save()
+        receipient_balance.refresh_from_db()
+        receipient_transfer_transaction = P2PTransfer(
             sender=sender, 
-            recipient=recipient, 
+            receipient=receipient, 
             amount=amount, 
-            owner=recipient,
+            owner=receipient,
             status="success",
-            new_balance=recipient_balance.book_balance
+            new_balance=receipient_balance.book_balance
         )
-        recipient_balance.save()
-        recipient_transfer_transaction.save()
+        
+        receipient_transfer_transaction.save()
 
         #return Sender Balance
         return_serializer = BalanceSerializer(sender_balance)

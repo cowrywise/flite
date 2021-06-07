@@ -1,6 +1,6 @@
 import uuid
 import secrets
-from flite.users import models
+from flite.users import models as UserModels
 
 def generate_new_user_passcode():
     """
@@ -9,7 +9,7 @@ def generate_new_user_passcode():
     def _passcode():
         return str(uuid.uuid4().int)[0:6]
     passcode = _passcode()
-    while models.NewUserPhoneVerification.objects.filter(referral_code=passcode).exists():
+    while UserModels.NewUserPhoneVerification.objects.filter(referral_code=passcode).exists():
         passcode = _passcode()
     return passcode
 
@@ -20,8 +20,8 @@ def send_mobile_signup_sms(phone_number, email):
     user_passcode = generate_new_user_passcode()
     
     try:
-        attempted_verification_obj = models.NewUserPhoneVerification.objects.get(phone_number=phone_number)
-    except models.NewUserPhoneVerification.DoesNotExist:
+        attempted_verification_obj = UserModels.NewUserPhoneVerification.objects.get(phone_number=phone_number)
+    except UserModels.NewUserPhoneVerification.DoesNotExist:
         attempted_verification_obj = None
 
     if attempted_verification_obj:
@@ -30,7 +30,7 @@ def send_mobile_signup_sms(phone_number, email):
         attempted_verification_obj.is_verified = False
         attempted_verification_obj.save()
     else:
-        attempted_verification_obj = models.NewUserPhoneVerification(phone_number=str(phone_number), verification_code=user_passcode,
+        attempted_verification_obj = UserModels.NewUserPhoneVerification(phone_number=str(phone_number), verification_code=user_passcode,
             is_verified=False, email=email)
         attempted_verification_obj.save()    
     #tasks.send_sms_verification_code.delay(phone_number, user_passcode)
@@ -41,8 +41,8 @@ def send_mobile_signup_sms(phone_number, email):
 def validate_mobile_signup_sms(phone_number, code):
 
     try:
-        new_user_code_obj  = models.NewUserPhoneVerification.objects.get(phone_number=phone_number, verification_code=code)
-    except models.NewUserPhoneVerification.DoesNotExist:
+        new_user_code_obj  = UserModels.NewUserPhoneVerification.objects.get(phone_number=phone_number, verification_code=code)
+    except UserModels.NewUserPhoneVerification.DoesNotExist:
         new_user_code_obj = None
 
     if new_user_code_obj:

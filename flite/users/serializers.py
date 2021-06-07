@@ -50,7 +50,6 @@ class CreateUserSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
 
-
 class SendNewPhonenumberSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
@@ -70,13 +69,12 @@ class SendNewPhonenumberSerializer(serializers.ModelSerializer):
         extra_kwargs = {'phone_number': {'write_only': True, 'required':True}, 'email': {'write_only': True}, }
         read_only_fields = ('id', 'verification_code')
 
-class BalanceSerializer(serializers.MoodelSerializer):
+class BalanceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Balance
         fields = ('id', 'book_balance', 'available_balance')
         
-
 class WithdrawalSerializer(serializers.Serializer):
 
     amount = serializers.FloatField()
@@ -98,12 +96,13 @@ class WithdrawalSerializer(serializers.Serializer):
         """
         Removes Amount to User Balance and Saves User Transaction.
         """
-        
+
         user = self.context["request"].user
         balance = Balance.objects.get(owner=user)
         balance.book_balance = F('book_balance') - validated_data.get("amount")
         balance.available_balance = F('available_balance') - validated_data.get("amount")
         balance.save()
+        balance.refresh_from_db()
         transaction = Transaction(
             owner=user,
             status="success",
@@ -136,6 +135,7 @@ class DepositSerializer(serializers.Serializer):
         balance.book_balance = F('book_balance') + validated_data.get("amount")
         balance.available_balance = F('available_balance') + validated_data.get("amount")
         balance.save()
+        balance.refresh_from_db()
         transaction = Transaction(
             owner=user,
             status="success",
@@ -150,6 +150,9 @@ class TransferSerializer(serializers.Serializer):
     amount = serializers.FloatField()
 
     def validate_amount(self, amount):
+        """
+        Validates Transfer Amount.
+        """
         if amount <= 0.0:
             raise serializers.ValidationError("Invalid Amount")
         sender = self.context["request"].user
@@ -158,3 +161,24 @@ class TransferSerializer(serializers.Serializer):
             raise serializers.ValidationError("Insufficient Balance")
         else:
             return amount
+
+class TransactionSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Transaction
+        fields = "__all__"
+
+class P2PTransferSerializer(serializers.ModelSerializer):
+
+    sender = serializers.SerializerMethodField()
+    receipient = serializers.SerializerMethodField()
+
+    def get_sender(self, obj):
+        return obj.sender.get_full_name()
+    
+    def get_receipient(self, obj):
+        return obj.receipient.get_full_name()
+
+    class Meta:
+        model = P2PTransfer
+        fields = "__all__"
