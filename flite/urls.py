@@ -20,9 +20,9 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('api/v1/accounts/<str:account_id>/transactions/',
          AccountTransactionListView.as_view(), name='transaction-list'),
-    path('api/v1/accounts/<str:account_id>/transactions/<str:transaction_id>/',
+    path('api/v1/account/<str:account_id>/transactions/<str:transaction_id>/',
          AccountTransactionDetailView.as_view(), name='transaction-detail'),
-    path('api/v1/accounts/<str:sender_account_id>/transfers/<str:recipient_account_id>/',
+    path('api/v1/account/<str:sender_account_id>/transfers/<str:recipient_account_id>/',
          P2PAPIView.as_view(), name='p2p-create'),
     # the 'api-root' from django rest-frameworks default router
     # http://www.django-rest-framework.org/api-guide/routers/#defaultrouter

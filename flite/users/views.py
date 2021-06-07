@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import detail_route
 from rest_framework.generics import GenericAPIView
+from rest_framework import pagination
 from .models import User, NewUserPhoneVerification, Balance, Transaction, P2PTransfer
 from .permissions import IsUserOrReadOnly, IsAccountOwner, IsWalletOwner
 from .serializers import CreateUserSerializer, UserSerializer, SendNewPhonenumberSerializer, UserTransactionSerializer, TransactionSerializer, P2PTransactionSerializer
@@ -112,6 +113,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
 
 class UserCreateViewSet(mixins.CreateModelMixin,
+                        mixins.ListModelMixin,
                         viewsets.GenericViewSet):
     """
     Creates user accounts
@@ -165,6 +167,7 @@ class AccountTransactionDetailView(GenericAPIView):
     queryset = Transaction.objects.all()
     lookup_url_kwarg = 'account_id'
     permission_classes = [IsAccountOwner]
+    pagination_class = pagination.PageNumberPagination
 
     def get(self, request, *args, **kwargs):
         transaction = self.get_queryset().get(id=kwargs['transaction_id'])
