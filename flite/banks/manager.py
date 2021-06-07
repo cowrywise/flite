@@ -1,4 +1,4 @@
-from flite.banks.models import Bank
+from flite.banks.models import Bank, AllBanks
 
 
 class AccountManager:
@@ -6,7 +6,7 @@ class AccountManager:
     def get_bank(cls, **query_params):
         try:
             return AllBanks.objects.get(**query_params)
-        except Bank.DoesNotExist:
+        except AllBanks.DoesNotExist:
             return None
 
     @classmethod
@@ -21,4 +21,4 @@ class AccountManager:
 
     @classmethod
     def all_accounts(cls, user):
-        return Bank.objects.filter(user=user)
+        return Bank.objects.filter(owner=user)
