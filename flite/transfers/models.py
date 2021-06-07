@@ -2,7 +2,7 @@ from django.db import models
 from django.conf import settings
 from flite.banks.models import Bank
 from flite.core.models import BaseModel
-
+from flite.constants import TRANSACTION_TYPE
 
 # Create your models here.
 
@@ -21,6 +21,9 @@ class Transaction(BaseModel):
 
 class BankTransfer(Transaction):
     bank = models.ForeignKey(Bank, on_delete=models.CASCADE)
+    transaction_type = models.CharField(
+        max_length=200, default=TRANSACTION_TYPE["CREDIT"]
+    )
 
     class Meta:
         verbose_name_plural = "Bank Transfers"
