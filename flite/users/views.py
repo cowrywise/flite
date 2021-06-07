@@ -11,7 +11,7 @@ from .serializers import (
 from rest_framework.views import APIView
 from . import utils
 from rest_framework.decorators import action
-from flite.transfers.serializers import TransferSerializer
+from flite.transfers.serializers import BankTransferSerializer
 from flite.banks.serializers import BankSerializer
 from flite.banks.manager import AccountManager
 from flite.transfers.wallets import UserWallet
@@ -53,7 +53,7 @@ class UserViewSet(
             status=status.HTTP_200_OK,
         )
 
-    @action(detail=True, methods=["POST"], serializer_class=TransferSerializer)
+    @action(detail=True, methods=["POST"], serializer_class=BankTransferSerializer)
     def deposits(self, request, pk=None):
         user = self.get_object()
         serializer = self.get_serializer(data=request.data, exclude=["owner"])
@@ -67,7 +67,33 @@ class UserViewSet(
                     "message": "successful",
                     "data": self.get_serializer(deposit).data,
                 },
-                status=status.HTTP_200_OK,
+                status=status.HTTP_201_CREATED,
+            )
+
+        return Response(
+            {
+                "success": False,
+                "message": "failed",
+                "data": serializer.errors,
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    @action(detail=True, methods=["POST"], serializer_class=TransferSerializer)
+    def withdrawals(self, request, pk=None):
+        user = self.get_object()
+        serializer = self.get_serializer(data=request.data, exclude=["owner"])
+        if serializer.is_valid():
+            withdrawal = UserWallet.withdraw_to_bank(
+                user=user, **serializer.validated_data
+            )
+            return Response(
+                {
+                    "success": True,
+                    "message": "successful",
+                    "data": self.get_serializer(withdrawal).data,
+                },
+                status=status.HTTP_201_CREATED,
             )
 
         return Response(
