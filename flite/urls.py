@@ -5,28 +5,19 @@ from django.contrib import admin
 from django.views.generic.base import RedirectView
 from rest_framework.routers import DefaultRouter
 from rest_framework.authtoken import views
-from .users.views import UserViewSet, UserCreateViewSet, SendNewPhonenumberVerifyViewSet
+from flite.users.views import UserViewSet, UserCreateViewSet,\
+    SendNewPhonenumberVerifyViewSet
+from flite.account.views import BankViewSet
 
-from rest_framework import permissions
-from drf_yasg.views import get_schema_view
-from drf_yasg import openapi
+from flite.config.swagger_api_docs import schema_view
 
 
-schema_view = get_schema_view(
-    openapi.Info(
-        title="Flite API",
-        default_version='v1',
-        description="Flite Banking Backend",
-        contact=openapi.Contact(email="contact@snippets.local"),
-        license=openapi.License(name="BSD License"),
-    ),
-    public=True,
-    permission_classes=(permissions.AllowAny,),
-)
+
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
 router.register(r'users', UserCreateViewSet)
+router.register(r'account', BankViewSet, basename="account")
 router.register(r'phone', SendNewPhonenumberVerifyViewSet)
 
 

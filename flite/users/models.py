@@ -7,7 +7,6 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.db.models.signals import post_save
 from rest_framework.authtoken.models import Token
 from flite.core.models import BaseModel
-from flite.account.models import Balance
 from phonenumber_field.modelfields import PhoneNumberField
 
 
@@ -26,7 +25,7 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
         UserProfile.objects.create(user=instance)
         Balance.objects.create(owner=instance)
 
-class Phonenumber(BaseModel):
+class Phonenumber(BaseModel): 
     number = models.CharField(max_length=24)
     is_verified = models.BooleanField(default=False)
     is_primary = models.BooleanField(default=False)
@@ -81,3 +80,15 @@ class Referral(BaseModel):
 
     class Meta:
         verbose_name = "User referral"
+
+
+class Balance(BaseModel):
+
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    book_balance = models.FloatField(default=0.0)
+    available_balance = models.FloatField(default=0.0)
+    active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "Balance"
+        verbose_name_plural = "Balances"

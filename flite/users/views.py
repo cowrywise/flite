@@ -2,7 +2,7 @@ from rest_framework import viewsets, mixins
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from .models import User, NewUserPhoneVerification
-from .permissions import IsUserOrReadOnly
+from flite.core.permissions import IsUserOrReadOnly
 from .serializers import CreateUserSerializer, \
     UserSerializer, SendNewPhonenumberSerializer
 from rest_framework.views import APIView
