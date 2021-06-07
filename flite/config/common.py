@@ -57,7 +57,6 @@ class Common(Configuration):
         ('Author', 'flite@example.com'),
     )
 
-    # Postgres
     DATABASES = {
         'default': dj_database_url.config(
             default='postgres://postgres:postgres@postgres:5432/flite',

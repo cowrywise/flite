@@ -79,18 +79,66 @@ class TestUserDetailTestCase(APITestCase):
 
 class TestTransactions(APITestCase):
 
+    def setUp(self):
+        self.sender = UserFactory()
+        self.recipient = UserFactory()
+        #self.url = reverse('user-detail', kwargs={'pk': self.user.pk})
+        self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.sender.auth_token}')
+
     def test_user_can_make_a_deposit(self):
-        assert False
+        self.url = reverse('user-deposits', kwargs={'pk':self.sender.id})
+        payload = {'amount':5000}
+        response = self.client.post(self.url, payload)
+        eq_(response.status_code, status.HTTP_201_CREATED)
 
     def test_user_can_make_a_withdrawal(self):
-        assert False
+        #make a deposit first
+        self.url = reverse('user-deposits', kwargs={'pk':self.sender.id})
+        payload = {'amount':5000}
+        response = self.client.post(self.url, payload)
+
+        # make withdrawal
+        self.url = reverse('user-withdrawals', kwargs={'pk':self.sender.id})
+        payload = {'amount':1000}
+        response = self.client.post(self.url, payload)
+        eq_(response.status_code, status.HTTP_201_CREATED)
 
     def test_user_can_make_a_p2p_transfer(self):
-        assert False
+        #make a deposit first
+        self.url = reverse('user-deposits', kwargs={'pk':self.sender.id})
+        payload = {'amount':20000}
+        response = self.client.post(self.url, payload)
+
+        #make a p2p transfer
+        self.url = reverse('p2p-create', kwargs={'sender_account_id':self.sender.id, 'recipient_account_id':self.recipient.id})
+        payload = {'amount':2000}
+        response = self.client.post(self.url, payload)
+        eq_(response.status_code, status.HTTP_201_CREATED)
+
+        data = response.json()
+        eq_(data['amount'], payload['amount'])
+        eq_(data['sender'], self.sender.id)
+        eq_(data['receipient'], self.recipient.id)
+
 
     def test_user_can_fetch_all_transactions(self):
-        assert False
+        self.url = reverse('transaction-list', kwargs={'account_id':self.sender.id})
+        response = self.client.get(self.url)
+        eq_(response.status_code, status.HTTP_200_OK)
+
+        eq_(type(response.json()), list)
+
+        eq_(len(response.json()), 0)
 
     def test_user_can_fetch_a_single_transaction(self):
-        assert False
+        #make a deposit first
+        self.url = reverse('user-deposits', kwargs={'pk':self.sender.id})
+        payload = {'amount':20000}
+        response = self.client.post(self.url, payload)
+        transaction_id = response.json()['transaction_id']
 
+        #fetch transaction
+        self.url = reverse('transaction-detail', kwargs={'account_id':self.sender.id, 'transaction_id':transaction_id})
+        response = self.client.get(self.url)
+        eq_(response.status_code, status.HTTP_200_OK)
+        eq_(type(response.json()), dict)

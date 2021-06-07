@@ -52,3 +52,14 @@ def validate_mobile_signup_sms(phone_number, code):
             new_user_code_obj.save()
             return 1, "Code verified"
     return 0, "The code provided is invalid. Kindly check and try again."
+
+def generate_reference_id():
+    """
+    Returns a unique reference for transaction
+    """
+    def _reference_code():
+        return str(uuid.uuid4().int)[0:6]
+    reference_code = _reference_code()
+    while models.Transaction.objects.filter(reference=reference_code).exists():
+        reference_code = _reference_code()
+    return reference_code
