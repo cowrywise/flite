@@ -1,8 +1,13 @@
-## Make a deposit to a User's Account
+# Accounts
+Supports depositing, withdrawing, transferring, and viewing single and multiple transactions.
 
 *Note:*
 
 - All endpoints can only be accessed by the Users who own the account
+
+
+## Make a deposit to a User's Account
+
 
 **Request**:
 
@@ -140,7 +145,7 @@ Content-Type application/json
     "reference": "Birthday Gift.", 
     "status": "SUCCESS", 
     "amount": 245369.86, 
-    "new_balance": 30.23
+    "new_balance": 30.
     }
 ]
 ```
