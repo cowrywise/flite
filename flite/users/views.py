@@ -4,7 +4,7 @@ from rest_framework import viewsets, mixins
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from .models import User, NewUserPhoneVerification
-from .permissions import IsOwner, IsOwnerOrReadOnly
+from .permissions import IsOwner, IsOwnerOrReadOnly, HasBankAccount
 from .serializers import CreateUserSerializer, UserSerializer, SendNewPhonenumberSerializer, P2PTransferSerializer, BankTransferSerializer, TransactionSerializer
 # from rest_framework.views import APIView
 from . import utils
@@ -40,13 +40,15 @@ class UserBankTransfersViewset(viewsets.GenericViewSet):
     """
 
     serializer_class = BankTransferSerializer
+    permission_classes = [HasBankAccount, IsOwner]
 
-    @action(methods=['post'], detail=True, permission_classes=[AllowAny])
+    @action(methods=['post'], detail=True)
     def deposits(self, request, pk=None):
         """
         view to create deposits
         """
         user = get_object_or_404(User, pk=pk)
+        self.check_object_permissions(request, user)
 
         serializer = BankTransferSerializer(data=request.data)
 
@@ -58,7 +60,7 @@ class UserBankTransfersViewset(viewsets.GenericViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-    @action(methods=['post'], detail=True, permission_classes=[IsOwner])
+    @action(methods=['post'], detail=True)
     def withdrawals(self, request, pk=None):
         """
         view to create withdrawals
@@ -69,9 +71,15 @@ class UserBankTransfersViewset(viewsets.GenericViewSet):
         withdrawal_data = request.data.copy()
 
         try:
-            amount = int(withdrawal_data.get('amount')) * -1
+            amount = float(withdrawal_data.get('amount')) * -1
             withdrawal_data['amount'] = amount
             # negate amount so it's subtracted from user's available balance before saving the instance
+
+            available = user.balance.first().available_balance
+
+            if available + amount < 0:
+                error_message = {'detail': 'You cannot withdraw more than your available balance'}
+                return Response(error_message, status=status.HTTP_403_FORBIDDEN)
 
         except ValueError:
             pass
@@ -148,9 +156,10 @@ class UserAccountTransactionsViewSet(viewsets.GenericViewSet):
     Retrieve transaction lists and transaction details
     """
     serializer_class = TransactionSerializer
+    permission_classes = [IsOwner]
     
 
-    @action(methods=['get'], detail=False, permission_classes=[IsOwner], url_path='(?P<pk>[^/.]+)/transactions')
+    @action(methods=['get'], detail=False, url_path='(?P<pk>[^/.]+)/transactions')
     def transactions_list(self, request, pk=None):
         """
         retrieve transaction list
@@ -164,7 +173,7 @@ class UserAccountTransactionsViewSet(viewsets.GenericViewSet):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(methods=['get'], detail=True, permission_classes=[IsOwner], url_path='transactions/(?P<transaction_id>[^/.]+)')
+    @action(methods=['get'], detail=True, url_path='transactions/(?P<transaction_id>[^/.]+)')
     def transactions_detail(self, request, pk=None, transaction_id=None):
         """
         retrieve transaction details

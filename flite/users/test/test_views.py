@@ -8,6 +8,7 @@ from rest_framework import status
 from faker import Faker
 from ..models import User,UserProfile,Referral
 from .factories import AllBanksFactory, BankFactory, UserFactory, P2PTransferFactory, BankTransferFactory
+from pprint import pprint
 
 fake = Faker()
 
@@ -80,7 +81,7 @@ class TestUserDetailTestCase(APITestCase):
         user = User.objects.get(pk=self.user.id)
         eq_(user.first_name, new_first_name)
 
-class TestTransactions(APITestCase):
+class BaseTestTransactions(APITestCase):
     """
     Tests all transactions operations
     """
@@ -95,14 +96,15 @@ class TestTransactions(APITestCase):
                                 account_name=self.user1.get_full_name
                             )
 
-        user1_balance = self.user1.balance.first()
+        self.user1_balance = self.user1.balance.first()
  
-        user1_balance.available_balance = fake.pyfloat(min_value=300_000, max_value=599_999, right_digits=2)
-        user1_balance.book_balance = fake.pyfloat(min_value=300_000, max_value=599_999, right_digits=2)
-        user1_balance.save()
+        self.user1_balance.available_balance = fake.pyfloat(min_value=300_000, max_value=599_999, right_digits=2)
+        self.user1_balance.book_balance = fake.pyfloat(min_value=300_000, max_value=599_999, right_digits=2)
+        self.user1_balance.save()
         
         self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.user1.auth_token}')
         
+class TestBankTransferTransactions(BaseTestTransactions):
 
     def test_user_can_make_a_deposit(self):
         url = reverse('user-deposits', kwargs={'pk': self.user1.pk})
@@ -121,6 +123,46 @@ class TestTransactions(APITestCase):
         eq_(response.status_code, status.HTTP_201_CREATED)
 
 
+    def test_user_cannot_withdraw_more_than_available_balance(self):
+        url = reverse('user-withdrawals', kwargs={'pk': self.user1.pk})
+
+        available = self.user1_balance.available_balance
+        withdrawal_data = model_to_dict(BankTransferFactory.build(amount=available+50), fields=['reference', 'amount'])
+
+        response = self.client.post(url, withdrawal_data)
+        eq_(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_user_cannot_make_bank_transfers_without_a_bank_account(self):
+        deposit_url =  reverse('user-deposits', kwargs={'pk': self.user1.pk})
+        withdrawal_url = reverse('user-withdrawals', kwargs={'pk': self.user1.pk})
+
+        transfer_data = model_to_dict(BankTransferFactory.build(), fields=['reference', 'amount'])
+
+        self.user1_account.delete()
+        # user1 has no bank account
+
+        deposit_response = self.client.post(deposit_url, transfer_data)
+        withdrawal_response = self.client.post(withdrawal_url, transfer_data)
+
+        eq_(deposit_response.status_code, status.HTTP_403_FORBIDDEN)
+        eq_(withdrawal_response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_unauthorized_user_cannot_make_bank_transfers(self):
+        deposit_url =  reverse('user-deposits', kwargs={'pk': self.user2.pk})
+        withdrawal_url = reverse('user-withdrawals', kwargs={'pk': self.user2.pk})
+        # user1 attempting to make bank transfers with user2's account
+
+        transfer_data = model_to_dict(BankTransferFactory.build(), fields=['reference', 'amount'])
+
+        deposit_response = self.client.post(deposit_url, transfer_data)
+        withdrawal_response = self.client.post(withdrawal_url, transfer_data)
+
+        eq_(deposit_response.status_code, status.HTTP_403_FORBIDDEN)
+        eq_(withdrawal_response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class TestP2PTransferTransactions(BaseTestTransactions):
+
     def test_user_can_make_a_p2p_transfer(self):
         url = reverse('account-transfers', kwargs={'sender_id': self.user1.pk, 'recipient_id': self.user2.pk})
 
@@ -128,22 +170,6 @@ class TestTransactions(APITestCase):
 
         response = self.client.post(url, p2p_transfer_data)
         eq_(response.status_code, status.HTTP_201_CREATED)
-
-
-    def test_user_can_fetch_all_transactions(self):
-        url = reverse('account-transactions-list', kwargs={'pk': self.user1.pk})
-
-
-        response = self.client.get(url)
-        eq_(response.status_code, status.HTTP_200_OK)
-        
-
-    def test_user_can_fetch_a_single_transaction(self):
-        bank_transfer = BankTransferFactory(owner=self.user1, bank=self.user1_account)
-        url = reverse('account-transactions-detail', kwargs={'pk': self.user1.pk, 'transaction_id': bank_transfer.pk})
-
-        response = self.client.get(url)
-        eq_(response.status_code, status.HTTP_200_OK)
 
     def test_user_cannot_make_a_p2p_transfer_to_themselves(self):
         url = reverse('account-transfers', kwargs={'sender_id': self.user1.pk, 'recipient_id': self.user1.pk})
@@ -154,15 +180,6 @@ class TestTransactions(APITestCase):
         response = self.client.post(url, p2p_transfer_data)
         eq_(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_unauthorized_user_cannot_make_a_withdrawal(self):
-        url = reverse('user-withdrawals', kwargs={'pk': self.user2.pk})
-        # user1 attempting to make a withdrawal from user2's account
-
-        withdrawal_data = model_to_dict(BankTransferFactory.build(), fields=['reference', 'amount'])
-
-        response = self.client.post(url, withdrawal_data)
-        eq_(response.status_code, status.HTTP_403_FORBIDDEN)
-    
     def test_unauthorized_user_cannot_make_a_p2p_transfer(self):
         url = reverse('account-transfers', kwargs={'sender_id': self.user2.pk, 'recipient_id': self.user1.pk})
         # user1 attempting to make a transfer to themselves from user2's account
@@ -171,6 +188,28 @@ class TestTransactions(APITestCase):
 
         response = self.client.post(url, p2p_transfer_data)
         eq_(response.status_code, status.HTTP_403_FORBIDDEN)
+
+class TestFetchTransactions(BaseTestTransactions):
+
+    def test_user_can_fetch_all_transactions(self):
+        account = BankFactory(owner=self.user1, bank=self.bank)
+        BankTransferFactory.create_batch(3, owner=self.user1, bank=account)
+        P2PTransferFactory.create_batch(2, owner=self.user1, sender=self.user1, recipient=self.user2)
+
+        url = reverse('account-transactions-list', kwargs={'pk': self.user1.pk})
+
+        response = self.client.get(url)
+        eq_(response.status_code, status.HTTP_200_OK)
+        eq_(response.json().__len__(), 5)
+        
+
+    def test_user_can_fetch_a_single_transaction(self):
+        bank_transfer = BankTransferFactory(owner=self.user1, bank=self.user1_account)
+        url = reverse('account-transactions-detail', kwargs={'pk': self.user1.pk, 'transaction_id': bank_transfer.pk})
+
+        response = self.client.get(url)
+        eq_(response.status_code, status.HTTP_200_OK)
+
 
     def test_unauthorized_user_cannot_fetch_all_transactions(self):
         url = reverse('account-transactions-list', kwargs={'pk': self.user2.pk})

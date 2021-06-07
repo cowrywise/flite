@@ -21,4 +21,12 @@ class IsOwner(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         return obj == request.user
 
+class HasBankAccount(permissions.BasePermission):
+    """
+    View-level permission to only allow Users with bank accounts access a view
+    """
+
+    def has_permission(self, request, view):
+        return request.user.accounts.count() >= 1
+
 

@@ -77,6 +77,7 @@ class BankTransferSerializer(serializers.ModelSerializer):
         fields = ('id', 'owner', 'reference', 'status', 'amount', 'new_balance')
         read_only_fields = ('owner', 'status', 'new_balance')
 
+
     def create(self, validated_data):
         owner = validated_data.get('owner')
         amount = validated_data.get('amount')
