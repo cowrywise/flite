@@ -1,6 +1,6 @@
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets, mixins, status
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from .models import User, NewUserPhoneVerification
 from .permissions import IsUserOrReadOnly
 from .serializers import (
@@ -11,6 +11,10 @@ from .serializers import (
 from rest_framework.views import APIView
 from . import utils
 from rest_framework.decorators import action
+from flite.transfers.serializers import TransferSerializer
+from flite.banks.serializers import BankSerializer
+from flite.banks.manager import AccountManager
+from flite.transfers.wallets import UserWallet
 
 
 class UserViewSet(
@@ -27,9 +31,53 @@ class UserViewSet(
     serializer_class = UserSerializer
     permission_classes = (IsUserOrReadOnly,)
 
-    @action(detail=False, methods=["POST"])
-    def deposits(self, request):
-        pass
+    def get_permissions(self):
+        if self.action in ["list", "retrieve", "Update"]:
+            permission_classes = self.permission_classes
+        else:
+            permission_classes = [IsAuthenticated]
+
+        return [permission() for permission in permission_classes]
+
+    @action(detail=False, methods=["GET"])
+    def registered_banks(self, request):
+        """all banks belonging to the user"""
+        accounts = AccountManager.all_accounts(user=request.user)
+        serializer = BankSerializer(accounts, many=True)
+        return Response(
+            {
+                "success": True,
+                "message": "successful",
+                "data": serializer.data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    @action(detail=True, methods=["POST"], serializer_class=TransferSerializer)
+    def deposits(self, request, pk=None):
+        user = self.get_object()
+        serializer = self.get_serializer(data=request.data, exclude=["owner"])
+        if serializer.is_valid():
+            deposit = UserWallet.receive_bank_deposit(
+                user=user, **serializer.validated_data
+            )
+            return Response(
+                {
+                    "success": True,
+                    "message": "successful",
+                    "data": self.get_serializer(deposit).data,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        return Response(
+            {
+                "success": False,
+                "message": "failed",
+                "data": serializer.errors,
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
 
 class UserCreateViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):

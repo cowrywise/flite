@@ -4,6 +4,8 @@ from django.db.models.functions import Coalesce
 from flite.transfers.models import BankTransfer, P2PTransfer
 from flite.constants import TRANSACTION_STATUS
 
+from flite.utils import unique_reference
+
 
 class UserWallet:
     @classmethod
@@ -23,11 +25,11 @@ class UserWallet:
         return bool(cls.balance(user) >= amount)
 
     @classmethod
-    def update_balance(cls, amount):
+    def update_balance(cls, user, amount):
         return cls.balance(user) + amount
 
     @classmethod
-    def receive_bank_deposit(cls, user, amount, from_bank):
+    def receive_bank_deposit(cls, user, amount, bank):
         reference = unique_reference(BankTransfer)
         old_balance = cls.balance(user)
         return BankTransfer.objects.create(
@@ -35,8 +37,8 @@ class UserWallet:
             reference=reference,
             status=TRANSACTION_STATUS["SUCCESS"],
             amount=amount,
-            bank=from_bank,
-            new_balance=update_balance(amount),
+            bank=bank,
+            new_balance=cls.update_balance(user, amount),
         )
 
     @classmethod
@@ -54,7 +56,5 @@ class UserWallet:
             recipient=recipient,
             status=status,
             amount=amount,
-            new_balance=update_balance(amount),
+            new_balance=cls.update_balance(user, amount),
         )
-
-

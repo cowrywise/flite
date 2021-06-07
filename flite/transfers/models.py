@@ -7,8 +7,6 @@ from flite.core.models import BaseModel
 # Create your models here.
 
 
-
-
 class Transaction(BaseModel):
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="transaction"
@@ -38,5 +36,3 @@ class P2PTransfer(Transaction):
 
     class Meta:
         verbose_name_plural = "P2P Transfers"
-
-
