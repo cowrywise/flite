@@ -2,7 +2,7 @@ from django.db.models import Sum
 from django.db.models import Value as V
 from django.db.models.functions import Coalesce
 from flite.transfers.models import BankTransfer, P2PTransfer
-from flite.constants import TRANSACTION_STATUS
+from flite.constants import TRANSACTION_STATUS, TRANSACTION_TYPE
 
 from flite.utils import unique_reference
 
@@ -10,15 +10,30 @@ from flite.utils import unique_reference
 class UserWallet:
     @classmethod
     def balance(cls, user):
-        bank_transfers = BankTransfer.objects.filter(
-            owner=user, status=TRANSACTION_STATUS["SUCCESS"]
+        bank_deposits = BankTransfer.objects.filter(
+            owner=user,
+            status=TRANSACTION_STATUS["SUCCESS"],
+            transaction_type=TRANSACTION_TYPE["CREDIT"],
         ).aggregate(payment=Coalesce(Sum("amount"), V(0.0)))["payment"]
 
-        p2p_transfers = P2PTransfer.objects.filter(
+        bank_withdraws = BankTransfer.objects.filter(
+            owner=user,
+            status=TRANSACTION_STATUS["SUCCESS"],
+            transaction_type=TRANSACTION_TYPE["DEBIT"],
+        ).aggregate(payment=Coalesce(Sum("amount"), V(0.0)))["payment"]
+
+        received_funds = P2PTransfer.objects.filter(
             recipient=user, status=TRANSACTION_STATUS["SUCCESS"]
         ).aggregate(payment=Coalesce(Sum("amount"), V(0.0)))["payment"]
 
-        return bank_transfers + p2p_transfers
+        sent_funds = P2PTransfer.objects.filter(
+            sender=user, status=TRANSACTION_STATUS["SUCCESS"]
+        ).aggregate(payment=Coalesce(Sum("amount"), V(0.0)))["payment"]
+
+        p2p_transfers = received_funds - sent_funds
+        bank_tansactions = bank_deposits - bank_withdraws
+
+        return bank_tansactions + p2p_transfers
 
     @classmethod
     def has_enough_funds(cls, user, amount):
@@ -36,6 +51,7 @@ class UserWallet:
             owner=user,
             reference=reference,
             status=TRANSACTION_STATUS["SUCCESS"],
+            transaction_type=TRANSACTION_TYPE["CREDIT"],
             amount=amount,
             bank=bank,
             new_balance=cls.update_balance(user, amount),
@@ -56,5 +72,17 @@ class UserWallet:
             recipient=recipient,
             status=status,
             amount=amount,
+            new_balance=cls.update_balance(user, amount),
+        )
+
+    @classmethod
+    def withdraw_to_bank(cls, user, amount, bank):
+        return BankTransfer.objects.create(
+            owner=user,
+            reference=reference,
+            status=TRANSACTION_STATUS["SUCCESS"],
+            transaction_type=TRANSACTION_TYPE["DEBIT"],
+            amount=amount,
+            bank=bank,
             new_balance=cls.update_balance(user, amount),
         )
