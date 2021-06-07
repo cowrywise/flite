@@ -29,6 +29,7 @@ class Common(Configuration):
         "flite.users",
         "flite.core",
         "flite.banks",
+        "flite.transfers",
     )
 
     # https://docs.djangoproject.com/en/2.0/topics/http/middleware/
