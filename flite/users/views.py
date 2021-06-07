@@ -10,6 +10,7 @@ from .serializers import (
 )
 from rest_framework.views import APIView
 from . import utils
+from rest_framework.decorators import action
 
 
 class UserViewSet(
@@ -25,6 +26,10 @@ class UserViewSet(
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (IsUserOrReadOnly,)
+
+    @action(detail=False, methods=["POST"])
+    def deposits(self, request):
+        pass
 
 
 class UserCreateViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
