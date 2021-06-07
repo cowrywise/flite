@@ -20,12 +20,11 @@ class BankSerializer(serializers.ModelSerializer):
 
 
 
-# class CardSerializer(serializers.ModelSerializer):
-#     owner = UserSerializer
-#     bank = AllBanksSerializer
+class CardSerializer(serializers.ModelSerializer):
+    owner = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
-#     class Meta:
-#         model = Card
-#         fields = ('owner', 'authorization_code', 'ctype', 'cbrand', 
-#         'country_code', 'name', 'bank', 'number', 'is_active',)
+    class Meta:
+        model = Card
+        fields = ('owner', 'authorization_code', 'ctype', 'cbrand', 
+        'country_code', 'name', 'bank', 'number', 'is_active',)
 
