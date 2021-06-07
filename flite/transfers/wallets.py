@@ -41,13 +41,12 @@ class UserWallet:
 
     @classmethod
     def update_balance(cls, user, amount):
-        return cls.balance(user) + amount
+        return cls.balance(user)
 
     @classmethod
     def receive_bank_deposit(cls, user, amount, bank):
         reference = unique_reference(BankTransfer)
-        old_balance = cls.balance(user)
-        return BankTransfer.objects.create(
+        deposit = BankTransfer.objects.create(
             owner=user,
             reference=reference,
             status=TRANSACTION_STATUS["SUCCESS"],
@@ -56,6 +55,9 @@ class UserWallet:
             bank=bank,
             new_balance=cls.update_balance(user, amount),
         )
+        deposit.new_balance = cls.update_balance(user, amount)
+        deposit.save()
+        return deposit
 
     @classmethod
     def p2p_transfer(cls, sender, recipient, amount):
@@ -65,24 +67,34 @@ class UserWallet:
             if cls.has_enough_funds(sender, amount)
             else TRANSACTION_STATUS["FAILED"]
         )
-        return P2PTransfer.objects.create(
+        transfer = P2PTransfer.objects.create(
             owner=sender,
             sender=sender,
             reference=reference,
             recipient=recipient,
             status=status,
             amount=amount,
-            new_balance=cls.update_balance(user, amount),
         )
+        transfer.new_balance = cls.update_balance(user, amount)
+        transfer.save()
+        return transfer
 
     @classmethod
     def withdraw_to_bank(cls, user, amount, bank):
-        return BankTransfer.objects.create(
+        reference = unique_reference(BankTransfer)
+        status = (
+            TRANSACTION_STATUS["SUCCESS"]
+            if cls.has_enough_funds(user, amount)
+            else TRANSACTION_STATUS["FAILED"]
+        )
+        withdrawal = BankTransfer.objects.create(
             owner=user,
             reference=reference,
-            status=TRANSACTION_STATUS["SUCCESS"],
+            status=status,
             transaction_type=TRANSACTION_TYPE["DEBIT"],
             amount=amount,
             bank=bank,
-            new_balance=cls.update_balance(user, amount),
         )
+        withdrawal.new_balance = cls.update_balance(user, amount)
+        withdrawal.save()
+        return withdrawal
