@@ -1,7 +1,7 @@
 from django.db.models import Sum
 from django.db.models import Value as V
 from django.db.models.functions import Coalesce
-from flite.banks.models import BankTransfer, P2PTransfer
+from flite.transfers.models import BankTransfer, P2PTransfer
 from flite.constants import TRANSACTION_STATUS
 
 
@@ -27,18 +27,21 @@ class UserWallet:
         return cls.balance(user) + amount
 
     @classmethod
-    def receive_bank_deposit(cls, user, amount):
+    def receive_bank_deposit(cls, user, amount, from_bank):
+        reference = unique_reference(BankTransfer)
         old_balance = cls.balance(user)
         return BankTransfer.objects.create(
             owner=user,
-            reference="",
+            reference=reference,
             status=TRANSACTION_STATUS["SUCCESS"],
             amount=amount,
+            bank=from_bank,
             new_balance=update_balance(amount),
         )
 
     @classmethod
     def p2p_transfer(cls, sender, recipient, amount):
+        reference = unique_reference(P2PTransfer)
         status = (
             TRANSACTION_STATUS["SUCCESS"]
             if cls.has_enough_funds(sender, amount)
@@ -47,8 +50,11 @@ class UserWallet:
         return P2PTransfer.objects.create(
             owner=sender,
             sender=sender,
-            status=TRANSACTION_STATUS["SUCCESS"],
+            reference=reference,
+            recipient=recipient,
+            status=status,
             amount=amount,
             new_balance=update_balance(amount),
-            recipient=recipient,
         )
+
+
