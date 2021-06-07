@@ -17,10 +17,12 @@ class AllBanks(BaseModel):
         verbose_name_plural = "All Banks"
 
 
-class Bank(models.Model):
-
+class Bank(BaseModel):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     bank = models.ForeignKey(AllBanks, on_delete=models.CASCADE)
     account_name = models.CharField(max_length=100)
     account_number = models.CharField(max_length=50)
     account_type = models.CharField(max_length=50)
+
+
+
