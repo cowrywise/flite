@@ -2,13 +2,26 @@ from rest_framework import mixins, viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from flite.users.models import Balance, Transaction
-# from flite.users.permissions import IsUserOrReadOnly
-from flite.users.serializers import CreateDepositSerializer
+from flite.users.models import Transaction
+from flite.users.serializers import CreateDepositSerializer, CreateWithdrawalSerializer
 
 
-class DepositViewSet(mixins.CreateModelMixin,
-                     viewsets.GenericViewSet):
+class BaseDepositWithdrawalViewSet(mixins.CreateModelMixin,
+                                   viewsets.GenericViewSet):
+    queryset = Transaction.objects.all()
+    serializer_class = None
+    permission_classes = []
+
+    def custom_create(self, kwargs, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.context["user_id"] = kwargs.get('user_id', None)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK, headers=headers)
+
+
+class DepositViewSet(BaseDepositWithdrawalViewSet):
     """
     Creates a deposit into a user account
     """
@@ -17,9 +30,22 @@ class DepositViewSet(mixins.CreateModelMixin,
     permission_classes = (IsAuthenticated,)
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.context["user_id"] = kwargs.get('user_id', None)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return self.custom_create(kwargs, request)
+
+
+class WithdrawalViewSet(BaseDepositWithdrawalViewSet):
+    """
+    Makes a withdrawal from a user account
+    """
+    queryset = Transaction.objects.all()
+    serializer_class = CreateWithdrawalSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def create(self, request, *args, **kwargs):
+        owner_id = kwargs.get('user_id', None)
+        request_user = request.user
+        if str(request_user.id) != owner_id:
+            return Response(
+                {"detail": "Permission denied, you cant withdraw from another account, kindly login to that account"},
+                status=status.HTTP_403_FORBIDDEN)
+        return self.custom_create(kwargs, request)

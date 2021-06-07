@@ -5,7 +5,7 @@ from nose.tools import ok_, eq_
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from faker import Faker
-from ..models import User, UserProfile, Referral
+from ..models import User, UserProfile, Referral, Balance
 from .factories import UserFactory
 
 fake = Faker()
@@ -77,11 +77,18 @@ class TestUserDetailTestCase(APITestCase):
         eq_(user.first_name, new_first_name)
 
 
-def deposit_detail_url(user_id):
+def deposit_url(user_id):
     """
-    Return deposit detail url
+    Return deposit url
     """
     return reverse('transaction-deposit-list', args=[user_id])
+
+
+def withdrawal_url(user_id):
+    """
+    Return withdrawal url
+    """
+    return reverse('transaction-withdrawal-list', args=[user_id])
 
 
 def sample_user(username='username', email='user@example.com', password='password'):
@@ -91,29 +98,67 @@ def sample_user(username='username', email='user@example.com', password='passwor
     return User.objects.create_user(username, email, password)
 
 
+def sample_update_balance_for_user(user, amount):
+    balance = Balance.objects.filter(owner=user).first()
+    balance.available_balance = amount
+    balance.book_balance = amount
+    balance.save()
+    return balance
+
+
 class TestTransactions(APITestCase):
 
     def setUp(self):
         self.user_one = sample_user(username='username_one', email='user_one@example.com', password='password')
         self.user_two = sample_user(username='username_two', email='user_two@example.com', password='password')
-        self.client = APIClient()
-        self.client.force_authenticate(self.user_one)
-        self.client.force_authenticate(self.user_two)
+        self.client_one = APIClient()
+        self.client_two = APIClient()
+        self.client_one.force_authenticate(self.user_one)
+        self.client_two.force_authenticate(self.user_two)
+
+    def tearDown(self):
+        self.user_one.delete()
+        self.user_two.delete()
 
     def test_user_can_make_a_deposit(self):
         payload = {'amount': 1000.00}
-        url = deposit_detail_url(self.user_one.id)
-        res = self.client.post(url, payload)
-        eq_(res.status_code, status.HTTP_201_CREATED)
+        url = deposit_url(self.user_one.id)
+        res = self.client_one.post(url, payload)
+        balance = Balance.objects.filter(owner=self.user_one.id).first()
+        eq_(balance.available_balance, 1000.00)
+        eq_(res.status_code, status.HTTP_200_OK)
 
     def test_user_can_not_make_a_deposit_with_invalid_user_id(self):
         payload = {'amount': 1000.00}
-        url = deposit_detail_url('a09d27e8-870d-4fa9-a999-70eeeeeeeee2')
-        res = self.client.post(url, payload)
+        url = deposit_url('a09d27e8-870d-4fa9-a999-70eeeeeeeee2')
+        res = self.client_one.post(url, payload)
         eq_(res.status_code, status.HTTP_400_BAD_REQUEST)
 
-    # def test_user_can_make_a_withdrawal(self):
-    #     assert False
+    def test_user_can_make_a_withdrawal(self):
+        sample_update_balance_for_user(self.user_two, 1000.00)
+        payload = {'amount': 500.00}
+        url = withdrawal_url(self.user_two.id)
+        res = self.client_two.post(url, payload)
+        balance = Balance.objects.filter(owner=self.user_two).first()
+        eq_(balance.available_balance, 500.00)
+        eq_(res.status_code, status.HTTP_200_OK)
+
+    def test_user_can_not_make_a_withdrawal_with_zero_balance(self):
+        payload = {'amount': 1000.00}
+        balance = Balance.objects.filter(owner=self.user_two.id).first()
+        url = withdrawal_url(self.user_two.id)
+        res = self.client_two.post(url, payload)
+        eq_(balance.available_balance, 0.00)
+        eq_(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_user_can_not_make_a_withdrawal_with_account_that_is_not_yours(self):
+        payload = {'amount': 1000.00}
+        amount = 1000.00
+        sample_balance_for_user_two = sample_update_balance_for_user(self.user_two, amount)
+        url = withdrawal_url(self.user_two.id)
+        res = self.client_one.post(url, payload)
+        eq_(res.status_code, status.HTTP_403_FORBIDDEN)
+        eq_(sample_balance_for_user_two.available_balance, amount)
     #
     # def test_user_can_make_a_p2p_transfer(self):
     #     assert False
