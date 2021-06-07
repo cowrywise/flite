@@ -55,6 +55,7 @@ class UserViewSet(
 
     @action(detail=True, methods=["POST"], serializer_class=BankTransferSerializer)
     def deposits(self, request, pk=None):
+        """enables user deposit into wallet"""
         user = self.get_object()
         serializer = self.get_serializer(data=request.data, exclude=["owner"])
         if serializer.is_valid():
@@ -79,8 +80,9 @@ class UserViewSet(
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    @action(detail=True, methods=["POST"], serializer_class=TransferSerializer)
+    @action(detail=True, methods=["POST"], serializer_class=BankTransferSerializer)
     def withdrawals(self, request, pk=None):
+        """enables user withdraw to bank"""
         user = self.get_object()
         serializer = self.get_serializer(data=request.data, exclude=["owner"])
         if serializer.is_valid():
