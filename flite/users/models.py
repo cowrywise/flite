@@ -1,15 +1,17 @@
 import uuid
-from django.db import models
+
 from django.conf import settings
-from django.dispatch import receiver
 from django.contrib.auth.models import AbstractUser
-from django.utils.encoding import python_2_unicode_compatible
+from django.db import models
 from django.db.models.signals import post_save
-from rest_framework.authtoken.models import Token
+from django.dispatch import receiver
+from django.utils import timezone
+from django.utils.encoding import python_2_unicode_compatible
+
+from flite.banks.models import Bank
 from flite.core.models import BaseModel
 from phonenumber_field.modelfields import PhoneNumberField
-from django.utils import timezone
-from flite.banks.models import Bank
+from rest_framework.authtoken.models import Token
 
 
 @python_2_unicode_compatible

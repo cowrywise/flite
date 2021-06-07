@@ -1,4 +1,4 @@
-from flite.banks.models import Bank, AllBanks
+from flite.banks.models import AllBanks, Bank
 
 
 class AccountManager:

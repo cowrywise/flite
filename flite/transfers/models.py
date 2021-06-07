@@ -1,8 +1,9 @@
-from django.db import models
 from django.conf import settings
+from django.db import models
+
 from flite.banks.models import Bank
-from flite.core.models import BaseModel
 from flite.constants import TRANSACTION_TYPE
+from flite.core.models import BaseModel
 
 # Create your models here.
 

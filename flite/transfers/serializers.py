@@ -1,4 +1,3 @@
-from rest_framework import serializers
 from flite.banks.serializers import BankSerializer
 from flite.dynamic_serializer import DynamicFieldsModelSerializer
 from flite.transfers.models import BankTransfer

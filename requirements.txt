@@ -39,3 +39,5 @@ django-environ==0.4.5
 phonenumbers
 django-phonenumber-field
 whitenoise
+
+isort==5.8.0

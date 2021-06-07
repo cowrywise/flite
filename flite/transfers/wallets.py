@@ -1,9 +1,9 @@
 from django.db.models import Sum
 from django.db.models import Value as V
 from django.db.models.functions import Coalesce
-from flite.transfers.models import BankTransfer, P2PTransfer
-from flite.constants import TRANSACTION_STATUS, TRANSACTION_TYPE
 
+from flite.constants import TRANSACTION_STATUS, TRANSACTION_TYPE
+from flite.transfers.models import BankTransfer, P2PTransfer
 from flite.utils import unique_reference
 
 

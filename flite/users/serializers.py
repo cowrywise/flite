@@ -1,11 +1,7 @@
 from rest_framework import serializers
-from .models import (
-    User,
-    NewUserPhoneVerification,
-    UserProfile,
-    Referral,
-)
+
 from . import utils
+from .models import NewUserPhoneVerification, Referral, User, UserProfile
 
 
 class UserSerializer(serializers.ModelSerializer):

@@ -1,11 +1,13 @@
-from django.urls import reverse
-from django.forms.models import model_to_dict
 from django.contrib.auth.hashers import check_password
-from nose.tools import ok_, eq_
-from rest_framework.test import APITestCase
-from rest_framework import status
+from django.forms.models import model_to_dict
+from django.urls import reverse
+
 from faker import Faker
-from ..models import User,UserProfile,Referral
+from nose.tools import eq_, ok_
+from rest_framework import status
+from rest_framework.test import APITestCase
+
+from ..models import Referral, User, UserProfile
 from .factories import UserFactory
 
 fake = Faker()
@@ -93,4 +95,3 @@ class TestTransactions(APITestCase):
 
     def test_user_can_fetch_a_single_transaction(self):
         assert False
-

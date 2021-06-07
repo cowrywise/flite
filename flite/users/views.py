@@ -1,20 +1,18 @@
-from rest_framework import viewsets, mixins, status
-from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from .models import User, NewUserPhoneVerification
-from .permissions import IsUserOrReadOnly
-from .serializers import (
-    CreateUserSerializer,
-    UserSerializer,
-    SendNewPhonenumberSerializer,
-)
-from rest_framework.views import APIView
-from . import utils
-from rest_framework.decorators import action
-from flite.transfers.serializers import BankTransferSerializer
-from flite.banks.serializers import BankSerializer
 from flite.banks.manager import AccountManager
+from flite.banks.serializers import BankSerializer
+from flite.transfers.serializers import BankTransferSerializer
 from flite.transfers.wallets import UserWallet
+from rest_framework import mixins, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from . import utils
+from .models import NewUserPhoneVerification, User
+from .permissions import IsUserOrReadOnly
+from .serializers import (CreateUserSerializer, SendNewPhonenumberSerializer,
+                          UserSerializer)
 
 
 class UserViewSet(

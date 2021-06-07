@@ -1,5 +1,7 @@
 import uuid
+
 from flite.users import models
+
 
 def generate_new_user_passcode():
     """
