@@ -4,7 +4,7 @@ from flite.dynamic_serializer import DynamicFieldsModelSerializer
 from flite.transfers.models import BankTransfer
 
 
-class TransferSerializer(DynamicFieldsModelSerializer):
+class BankTransferSerializer(DynamicFieldsModelSerializer):
     banking_details = BankSerializer(read_only=True, source="bank")
     reference = serializers.CharField(read_only=True)
     status = serializers.CharField(read_only=True)
@@ -17,6 +17,7 @@ class TransferSerializer(DynamicFieldsModelSerializer):
             "reference",
             "status",
             "amount",
+            "transaction_type",
             "bank",
             "new_balance",
             "banking_details",
