@@ -1,4 +1,5 @@
 import uuid
+import secrets
 from flite.users import models
 
 def generate_new_user_passcode():
@@ -52,3 +53,6 @@ def validate_mobile_signup_sms(phone_number, code):
             new_user_code_obj.save()
             return 1, "Code verified"
     return 0, "The code provided is invalid. Kindly check and try again."
+
+def generate_ref():
+    return secrets.token_hex(6)

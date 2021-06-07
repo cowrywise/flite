@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from .models import User, NewUserPhoneVerification,UserProfile,Referral
+from .models import *
 from . import utils
+from django.db.models import F
 
 class UserSerializer(serializers.ModelSerializer):
 
@@ -68,5 +69,92 @@ class SendNewPhonenumberSerializer(serializers.ModelSerializer):
         fields = ('id', 'phone_number', 'verification_code', 'email',)
         extra_kwargs = {'phone_number': {'write_only': True, 'required':True}, 'email': {'write_only': True}, }
         read_only_fields = ('id', 'verification_code')
+
+class BalanceSerializer(serializers.MoodelSerializer):
+
+    class Meta:
+        model = Balance
+        fields = ('id', 'book_balance', 'available_balance')
         
-    
+
+class WithdrawalSerializer(serializers.Serializer):
+
+    amount = serializers.FloatField()
+
+    def validate_amount(self, amount):
+        """
+        Validates The Amount Entered By The User.
+        """
+        if amount <= 0.0:
+            raise serializers.ValidationError("Invalid Amount")
+        user = self.context["request"].user
+        balance = Balance.objects.get(owner=user)
+        if balance.available_balance < amount:
+            raise serializers.ValidationError("Insufficient Balance")
+        else:
+            return amount
+
+    def create(self, validated_data):
+        """
+        Removes Amount to User Balance and Saves User Transaction.
+        """
+        
+        user = self.context["request"].user
+        balance = Balance.objects.get(owner=user)
+        balance.book_balance = F('book_balance') - validated_data.get("amount")
+        balance.available_balance = F('available_balance') - validated_data.get("amount")
+        balance.save()
+        transaction = Transaction(
+            owner=user,
+            status="success",
+            amount=validated_data.get("amount"),
+            new_balance=balance.book_balance
+        )
+        transaction.save()
+        return balance
+
+class DepositSerializer(serializers.Serializer):
+
+    amount = serializers.FloatField()
+
+    def validate_amount(self, amount):
+        """
+        Validates the Amount Entered By the User.
+        """
+        if amount <= 0.0:
+            raise serializers.ValidationError("Invalid Amount")
+        else:
+            return amount
+
+    def create(self, validated_data):
+        """
+        Adds Amount to User Balance and Saves User Transaction.
+        """
+
+        user = self.context["request"].user
+        balance = Balance.objects.get(owner=user)
+        balance.book_balance = F('book_balance') + validated_data.get("amount")
+        balance.available_balance = F('available_balance') + validated_data.get("amount")
+        balance.save()
+        transaction = Transaction(
+            owner=user,
+            status="success",
+            amount=validated_data.get("amount"),
+            new_balance=balance.book_balance
+        )
+        transaction.save()
+        return balance
+
+class TransferSerializer(serializers.Serializer):
+
+    amount = serializers.FloatField()
+
+    def validate_amount(self, amount):
+        if amount <= 0.0:
+            raise serializers.ValidationError("Invalid Amount")
+        sender = self.context["request"].user
+        balance = Balance.objects.get(owner=sender)
+        if balance.available_balance < amount:
+            raise serializers.ValidationError("Insufficient Balance")
+        else:
+            return amount

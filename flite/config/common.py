@@ -47,7 +47,7 @@ class Common(Configuration):
 
     ALLOWED_HOSTS = ["*"]
     ROOT_URLCONF = 'flite.urls'
-    SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+    SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', "testteepy1234")
     WSGI_APPLICATION = 'flite.wsgi.application'
 
     # Email
@@ -58,11 +58,19 @@ class Common(Configuration):
     )
 
     # Postgres
+    #DATABASES = {
+    #    'default': dj_database_url.config(
+    #        default='postgres://postgres:postgres@postgres:5432/flite',
+    #        conn_max_age=int(os.getenv('POSTGRES_CONN_MAX_AGE', 600))
+    #    )
+    #}
+
+    #sqlite (For Local)
     DATABASES = {
-        'default': dj_database_url.config(
-            default='postgres://postgres:postgres@postgres:5432/flite',
-            conn_max_age=int(os.getenv('POSTGRES_CONN_MAX_AGE', 600))
-        )
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': 'db.sqlite3',
+        }
     }
 
     # General

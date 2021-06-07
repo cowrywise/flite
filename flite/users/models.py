@@ -9,6 +9,7 @@ from rest_framework.authtoken.models import Token
 from flite.core.models import BaseModel
 from phonenumber_field.modelfields import PhoneNumberField
 from django.utils import timezone
+from .utils import *
 
 @python_2_unicode_compatible
 class User(AbstractUser):
@@ -116,10 +117,11 @@ class Bank(models.Model):
     
 class Transaction(BaseModel):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='transaction')
-    reference = models.CharField(max_length=200)
+    reference = models.CharField(max_length=200, default=generate_ref)
     status = models.CharField(max_length=200)
     amount = models.FloatField(default=0.0)
     new_balance = models.FloatField(default=0.0)
+
 
 
 
