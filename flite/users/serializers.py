@@ -79,7 +79,7 @@ class WithdrawalDepositSerializer(serializers.Serializer):
 class TransferSerializer(serializers.Serializer):
     amount = serializers.DecimalField(max_digits=1000_000, decimal_places=2)
 
-    def validated_amount(self, amount):
+    def validate_amount(self, amount):
         if amount < 50:
             raise serializers.ValidationError(
                 "Amount specified for transfer is less than the minimum required amount of #50"

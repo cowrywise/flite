@@ -24,9 +24,8 @@ from .serializers import (
     AccountSerializer
 )
 
-class UserViewSet(mixins.RetrieveModelMixin,
+class UserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin,
                   mixins.UpdateModelMixin,
-                  mixins.ListModelMixin,
                   viewsets.GenericViewSet):
     """
     Updates and retrieves user accounts
@@ -65,7 +64,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
 
     @transaction.atomic
-    @action(detail=True, methods=['post', 'get'])
+    @action(detail=True, methods=['post'], url_path="withdrawals", )
     def withdrawals(self, request, pk=None):
         user = self.get_object()
         serializer = WithdrawalDepositSerializer(data=request.data)
@@ -119,7 +118,7 @@ class AccountViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.
     serializer_class = AccountSerializer
 
     @transaction.atomic
-    @action(detail=True, methods=['post'], url_path="transfers/(?P<recipient_account_pk>[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12})", url_name="account-transfers")
+    @action(detail=True, methods=['post'], url_path="transfers/(?P<recipient_account_pk>[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12})", url_name="transfers")
     def transfers(self, request, pk=None, recipient_account_pk=None):
         sender_account = self.get_object()
         serializer = TransferSerializer(data=request.data)
@@ -132,7 +131,7 @@ class AccountViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.
             except Account.DoesNotExist as error:
                 return Response(data={"message": str(error)})
             except Exception as error:
-                return Response(data={"message": str(error)})
+                return Response(data={"message": str(error)}, status=HTTP_403_FORBIDDEN)
             else:
                 amount = serializer.validated_data.get('amount')
                 if sender_account.account_balance < amount or sender_account.account_balance == 0:
@@ -174,7 +173,7 @@ class AccountViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.
                     reference=transaction_ref_id
                 )
 
-                return Response(data={"message": "Amount => %s" % amount})
+                return Response(data={"message": "Success"})
         return Response(data={"message": "Sender account does not exist, please ensure you specify already existing account id"})
 
 
@@ -182,11 +181,11 @@ class AccountViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.
         if self.action == 'transfers':
             return TransferSerializer
         return super().get_serializer_class()
-class TransactionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+class TransactionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     """
     Get transactions performed on an account
     """
     serializer_class = TransactionSerializer
 
     def get_queryset(self):
-        return Transaction.objects.filter(owner=self.kwargs['transactions_pk'])
+        return Transaction.objects.filter(owner=self.kwargs['account_pk'])

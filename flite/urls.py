@@ -3,19 +3,18 @@ from django.urls import path, re_path, include, reverse_lazy
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.views.generic.base import RedirectView
-from rest_framework.routers import DefaultRouter
-from rest_framework_nested import routers as nested_routers
+from rest_framework_nested import routers
 from rest_framework.authtoken import views
 from .users.views import UserViewSet, UserCreateViewSet, AccountViewSet, TransactionViewSet
 
 
-router = DefaultRouter()
-router.register(r'users', UserViewSet)
-router.register(r'users', UserCreateViewSet)
+router = routers.DefaultRouter()
+router.register(r'users', UserViewSet, basename="users")
+router.register(r'register', UserCreateViewSet, basename="register")
 router.register(r'account', AccountViewSet)
 
-transaction_router = nested_routers.NestedDefaultRouter(router, r'account', lookup="transactions")
-transaction_router.register(r'transactions', TransactionViewSet, basename='user-transactions')
+transaction_router = routers.NestedDefaultRouter(router, r'account', lookup="account")
+transaction_router.register(r'transactions', TransactionViewSet, basename='account-transactions')
 
 
 urlpatterns = [

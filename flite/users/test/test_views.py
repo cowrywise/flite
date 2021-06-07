@@ -95,7 +95,6 @@ class TestUserDepositTestCase(APITestCase):
     def test_post_deposit_with_no_data_fails(self):
         deposit_url = reverse('users-deposits', kwargs={'pk': self.user.pk})
         response = self.client.post(deposit_url, {})
-        print(response.json())
         eq_(response.json().get("message"), {'required': 'This field is required.', 'null': 'This field may not be null.', 'invalid': 'Invalid data. Expected a dictionary, but got {datatype}.'})
 
     def test_post_deposit_with_data_succeeds(self):
