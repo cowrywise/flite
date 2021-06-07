@@ -1,10 +1,10 @@
 
 from rest_framework import viewsets
 from rest_framework.response import Response
-from .models import AllBanks, Bank, Card
+from .models import AllBanks, Bank, Card, CardTransfer
 from flite.core.permissions import IsUserOrReadOnly
 from .serializers import AllBanksSerializer, BankSerializer, \
-    CardSerializer
+    CardSerializer, CardTransferSerializer
 
 
 
@@ -28,3 +28,14 @@ class CardViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Card.objects.filter(owner=self.request.user)
+
+
+class CardTransferViewSet(viewsets.ModelViewSet):
+    """
+    A simple ViewSet for viewing and editing Cards.
+    """
+    serializer_class = CardTransferSerializer
+    permission_classes = [IsUserOrReadOnly]
+
+    def get_queryset(self):
+        return CardTransfer.objects.filter(owner=self.request.user)

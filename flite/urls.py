@@ -7,7 +7,8 @@ from rest_framework.routers import DefaultRouter
 from rest_framework.authtoken import views
 from flite.users.views import UserViewSet, UserCreateViewSet,\
     SendNewPhonenumberVerifyViewSet
-from flite.account.views import BankViewSet, CardViewSet
+from flite.account.views import BankViewSet, CardViewSet, \
+    CardTransferViewSet
 
 from flite.config.swagger_api_docs import schema_view
 
@@ -19,6 +20,7 @@ router.register(r'users', UserViewSet)
 router.register(r'users', UserCreateViewSet)
 router.register(r'bank', BankViewSet, basename="bank")
 router.register(r'card', CardViewSet, basename="card")
+router.register(r'cardtransfer', CardTransferViewSet, basename="cardtransfer")
 router.register(r'phone', SendNewPhonenumberVerifyViewSet)
 
 
