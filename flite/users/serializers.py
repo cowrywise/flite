@@ -1,6 +1,7 @@
-from rest_framework import serializers
-from .models import User, NewUserPhoneVerification,UserProfile,Referral
+from rest_framework import request, serializers
+from .models import Transaction, User, NewUserPhoneVerification, UserProfile, Referral, BankTransfer, P2PTransfer
 from . import utils
+
 
 class UserSerializer(serializers.ModelSerializer):
 
@@ -69,4 +70,85 @@ class SendNewPhonenumberSerializer(serializers.ModelSerializer):
         extra_kwargs = {'phone_number': {'write_only': True, 'required':True}, 'email': {'write_only': True}, }
         read_only_fields = ('id', 'verification_code')
         
-    
+class BankTransferSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = BankTransfer
+        fields = ('id', 'owner', 'reference', 'status', 'amount', 'new_balance')
+        read_only_fields = ('owner', 'status', 'new_balance')
+
+    def create(self, validated_data):
+        owner = validated_data.get('owner')
+        amount = validated_data.get('amount')
+        user_balance = owner.balance.first()
+
+        new_balance = round(user_balance.available_balance + amount, 2)
+        # determine user's new balance
+
+        user_balance.book_balance = new_balance
+        # update user's book balance before tranfer completion
+
+        validated_data['new_balance'] = new_balance
+        validated_data['status'] = "SUCCESS"
+        validated_data['bank'] = owner.accounts.first()
+        validated_data['amount'] = abs(amount) # save amount as the absolute value of itself in the case of a withdrawal
+        
+        bank_transfer = BankTransfer.objects.create(**validated_data)
+        # complete bank transfer 
+
+        user_balance.available_balance = new_balance
+        user_balance.save()
+        # update and save user's available balance after transfer completion
+
+        return bank_transfer
+
+class P2PTransferSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = P2PTransfer
+        fields = ('id', 'owner', 'reference', 'status', 'amount', 'new_balance', 'sender', 'recipient')
+        read_only_fields = ('status', 'new_balance', 'sender', 'recipient', 'owner')
+
+    def create(self, validated_data):
+        sender = validated_data.get('sender')
+        recipient = validated_data.get('recipient')
+        amount = validated_data.get('amount')
+
+        sender_balance = sender.balance.first()
+        recipient_balance = recipient.balance.first()
+        # fetch sender and recipient current balances
+
+        new_sender_balance = round(sender_balance.available_balance - amount, 2)
+        new_recipient_balance = round(recipient_balance.available_balance + amount, 2)
+        # determine sender's and recipient's new balances
+
+        sender_balance.book_balance = new_sender_balance
+        recipient_balance.book_balance = new_recipient_balance
+        # update sender's and recipient's new balances
+
+        validated_data['new_balance'] = new_sender_balance
+        validated_data['status'] = "SUCCESS"
+        validated_data['owner']
+
+        p2p_transfer = P2PTransfer.objects.create(**validated_data)
+        # complete P2P transfer
+
+        sender_balance.available_balance = new_sender_balance
+        recipient_balance.available_balance = new_recipient_balance
+
+        sender_balance.save()
+        recipient_balance.save()
+        # update and save sender's and recipient's available balances
+
+        return p2p_transfer
+
+
+
+
+class TransactionSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Transaction
+        fields = ('id', 'owner', 'reference', 'status', 'amount', 'new_balance')
+        read_only_fields = ('status', 'new_balance', 'owner')
+        

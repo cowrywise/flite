@@ -84,7 +84,7 @@ class Referral(BaseModel):
 
 class Balance(BaseModel):
 
-    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='balance')
     book_balance = models.FloatField(default=0.0) 
     available_balance = models.FloatField(default=0.0) 
     active = models.BooleanField(default=True)
@@ -108,19 +108,18 @@ class AllBanks(BaseModel):
 
 class Bank(models.Model):
 
-    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='accounts')
     bank = models.ForeignKey(AllBanks, on_delete=models.CASCADE)
     account_name = models.CharField(max_length=100)
     account_number = models.CharField(max_length=50)
     account_type = models.CharField(max_length=50)
     
 class Transaction(BaseModel):
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='transaction')
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='transactions')
     reference = models.CharField(max_length=200)
     status = models.CharField(max_length=200)
     amount = models.FloatField(default=0.0)
     new_balance = models.FloatField(default=0.0)
-
 
 
 class BankTransfer(Transaction):
@@ -132,7 +131,7 @@ class BankTransfer(Transaction):
 
 class P2PTransfer(Transaction):
     sender = models.ForeignKey(User, on_delete=models.CASCADE,related_name="sender")
-    receipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name="recipient")
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name="recipient")
 
     class Meta:
         verbose_name_plural = "P2P Transfers"
