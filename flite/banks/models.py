@@ -1,9 +1,7 @@
 from django.db import models
-from django.contrib.auth import get_user_model
 
-# Create your models here.
-
-User = get_user_model()
+from django.conf import settings
+from flite.core.models import BaseModel
 
 
 class AllBanks(BaseModel):
@@ -21,7 +19,7 @@ class AllBanks(BaseModel):
 
 class Bank(models.Model):
 
-    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     bank = models.ForeignKey(AllBanks, on_delete=models.CASCADE)
     account_name = models.CharField(max_length=100)
     account_number = models.CharField(max_length=50)
