@@ -58,20 +58,20 @@ class Common(Configuration):
     )
 
     # Postgres
-    #DATABASES = {
-    #    'default': dj_database_url.config(
-    #        default='postgres://postgres:postgres@postgres:5432/flite',
-    #        conn_max_age=int(os.getenv('POSTGRES_CONN_MAX_AGE', 600))
-    #    )
-    #}
+    DATABASES = {
+        'default': dj_database_url.config(
+            default='postgres://postgres:postgres@postgres:5432/flite',
+            conn_max_age=int(os.getenv('POSTGRES_CONN_MAX_AGE', 600))
+        )
+    }
 
     #sqlite (For Local)
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': 'db.sqlite3',
-        }
-    }
+    #DATABASES = {
+    #    'default': {
+    #        'ENGINE': 'django.db.backends.sqlite3',
+    #        'NAME': 'db.sqlite3',
+    #    }
+    #}
 
     # General
     APPEND_SLASH = False
