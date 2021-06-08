@@ -1,5 +1,6 @@
-from flite.reviewer import ReviewerMixin
 import math
+
+from flite.reviewer import ReviewerMixin
 
 
 class TransferManager(ReviewerMixin):

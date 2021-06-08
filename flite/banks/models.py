@@ -1,8 +1,8 @@
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 from flite.core.models import BaseModel
-from django.utils import timezone
 
 
 class AllBanks(BaseModel):

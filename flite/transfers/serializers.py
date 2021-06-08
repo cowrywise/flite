@@ -1,10 +1,10 @@
 from flite.banks.serializers import BankSerializer
 from flite.dynamic_serializer import DynamicFieldsModelSerializer
-from flite.transfers.models import BankTransfer, P2PTransfer
-from flite.transfers.wallets import UserWallet
-from rest_framework import serializers
-from flite.users.serializers import UserSerializer
 from flite.transfers.checks import TransferManager
+from flite.transfers.models import BankTransfer, P2PTransfer, Transaction
+from flite.transfers.wallets import UserWallet
+from flite.users.serializers import UserSerializer
+from rest_framework import serializers
 
 
 class BankTransferSerializer(DynamicFieldsModelSerializer):
@@ -73,3 +73,20 @@ class P2PTransferSerializer(DynamicFieldsModelSerializer):
         if checks.get("success") is False:
             raise serializers.ValidationError(checks.get("message"))
         return attrs
+
+
+class TransferSerializer(DynamicFieldsModelSerializer):
+    owner_details = UserSerializer(read_only=True, source="owner")
+
+    class Meta:
+        model = Transaction
+        fields = [
+            "id",
+            "owner",
+            "owner_details",
+            "reference",
+            "status",
+            "amount",
+            "new_balance",
+            "created",
+        ]

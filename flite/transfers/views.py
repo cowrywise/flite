@@ -1,17 +1,16 @@
-from django.shortcuts import render
-
-
-from django.shortcuts import get_object_or_404
-from rest_framework import status, viewsets
-from rest_framework.response import Response
-from rest_framework.decorators import action
-
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404, render
+
+from flite.transfers.models import Transaction
+from flite.transfers.serializers import (P2PTransferSerializer,
+                                         TransferSerializer)
+from flite.transfers.wallets import UserWallet
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 User = get_user_model()
 
-from flite.transfers.serializers import P2PTransferSerializer
-from flite.transfers.wallets import UserWallet
 
 
 class AccountsViewSet(viewsets.ModelViewSet):
@@ -50,3 +49,10 @@ class AccountsViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+    @action(detail=True, methods=["GET"], serializer_class=TransferSerializer)
+    def transactions(self, request, pk=None):
+        queryset = Transaction.objects.filter(owner=request.user)
+        page = self.paginate_queryset(queryset)
+        serializer = self.serializer_class(page, many=True, exclude=["owner"])
+        return self.get_paginated_response(serializer.data)
