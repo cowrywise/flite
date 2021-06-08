@@ -1,11 +1,19 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, Transaction, Balance
+from .models import User, Transaction, Balance, UserProfile
 
 
 @admin.register(User)
 class UserAdmin(UserAdmin):
     pass
+
+
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = (
+        'user',
+        'referral_code',
+    )
 
 
 @admin.register(Transaction)

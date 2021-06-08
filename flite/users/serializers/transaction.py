@@ -33,8 +33,16 @@ class BaseTransactionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Transaction
-        fields = ('amount', 'id', 'owner', 'reference', 'status', 'transaction_type', 'new_balance', 'created')
-        read_only_fields = ('id', 'owner', 'reference', 'status', 'transaction_type', 'new_balance', 'created')
+        fields = (
+            'amount', 'id', 'owner', 'reference',
+            'status', 'transaction_type',
+            'new_balance', 'created'
+        )
+        read_only_fields = (
+            'id', 'owner', 'reference',
+            'status', 'transaction_type',
+            'new_balance', 'created'
+        )
 
 
 class CreateDepositSerializer(BaseTransactionSerializer):
@@ -99,19 +107,28 @@ class PeerToPeerTransferSerializer(serializers.ModelSerializer):
         )
         read_only_fields = (
             'id', 'owner', 'sender', 'recipient',
-            'reference', 'status', 'transaction_type', 'new_balance', 'created'
+            'reference', 'status', 'transaction_type',
+            'new_balance', 'created'
         )
 
     def create(self, validated_data):
-        sender_account_id = self.context.get('sender_account_id', None)
-        recipient_account_id = self.context.get('recipient_account_id', None)
+        sender_account_id = self.context.get(
+            'sender_account_id',
+            None
+        )
+        recipient_account_id = self.context.get(
+            'recipient_account_id',
+            None
+        )
         amount = validated_data.get('amount')
 
         self.validate_user_id(sender_account_id)
         self.validate_user_id(recipient_account_id)
 
-        sender_balance, sender_balance_created, sender_user = validate_and_create_balance(sender_account_id)
-        recipient_balance, recipient_balance_created, recipient_user = validate_and_create_balance(recipient_account_id)
+        sender_balance, sender_balance_created, sender_user = validate_and_create_balance(
+            sender_account_id)  # noqa: E501
+        recipient_balance, recipient_balance_created, recipient_user = validate_and_create_balance(
+            recipient_account_id)  # noqa: E501
 
         if sender_balance_created:
             raise serializers.ValidationError({"sender_account_id": "User must first make a deposit"})

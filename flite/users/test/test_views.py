@@ -131,8 +131,12 @@ def sample_update_balance_for_user(user, amount):
 class TestTransactions(APITestCase):
 
     def setUp(self):
-        self.user_one = sample_user(username='username_one', email='user_one@example.com', password='password')
-        self.user_two = sample_user(username='username_two', email='user_two@example.com', password='password')
+        self.user_one = sample_user(username='username_one',
+                                    email='user_one@example.com',
+                                    password='password')
+        self.user_two = sample_user(username='username_two',
+                                    email='user_two@example.com',
+                                    password='password')
         self.client_one = APIClient()
         self.client_two = APIClient()
         self.client_one.force_authenticate(self.user_one)
