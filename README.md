@@ -1,7 +1,5 @@
 # Flite
 
-# Flite
-
 
 # Local Set Up
 
