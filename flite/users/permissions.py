@@ -12,3 +12,22 @@ class IsUserOrReadOnly(permissions.BasePermission):
             return True
 
         return obj == request.user
+
+
+class IsUserTransactionOnly(permissions.BasePermission):
+    """
+    Allows access only users that owns a particular transaction.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        """
+        check object level permission
+        Args:
+            request:
+            view:
+            obj:
+
+        Returns:
+
+        """
+        return obj.owner_id == request.user.id

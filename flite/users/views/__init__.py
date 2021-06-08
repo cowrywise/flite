@@ -3,5 +3,6 @@ from flite.users.views.transaction import (
     DepositViewSet,
     WithdrawalViewSet,
     PeerToPeerTransferViewSet,
-    FetchPaginatedTransactionsForUserViewSet
+    FetchPaginatedTransactionsForUserViewSet,
+    FetchSingleTransactionsForUserView,
 )

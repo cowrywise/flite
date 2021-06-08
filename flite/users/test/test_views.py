@@ -101,9 +101,16 @@ def transfer_url(sender_account_id, recipient_account_id):
 
 def transactions_url(account_id):
     """
-    Return transaction url
+    Return transaction list url
     """
     return reverse('transaction-list', args=[account_id])
+
+
+def single_transaction_url(account_id, transaction_id):
+    """
+    Return a transaction detail url
+    """
+    return reverse('transaction-detail', args=[account_id, transaction_id])
 
 
 def sample_user(username='username', email='user@example.com', password='password'):
@@ -246,6 +253,11 @@ class TestTransactions(APITestCase):
         eq_(res.data.get('results'), serializer.data)
         eq_(res_two.data.get('results'), serializer_two.data)
 
+    def perform_a_transaction(self, user_id):
+        payload = {'amount': 1000.00}
+        url = deposit_url(user_id)
+        return self.client_one.post(url, payload)
+
     def test_user_can_not_fetch_all_transactions_that_does_not_belong_to_them(self):
         self.perform_a_transaction(self.user_one.id)
         self.perform_a_transaction(self.user_one.id)
@@ -256,10 +268,23 @@ class TestTransactions(APITestCase):
 
         eq_(res.status_code, status.HTTP_403_FORBIDDEN)
 
-    def perform_a_transaction(self, user_id):
-        payload = {'amount': 1000.00}
-        url = deposit_url(user_id)
-        self.client_one.post(url, payload)
+    def test_user_can_fetch_a_single_transaction(self):
+        _ = self.perform_a_transaction(self.user_one.id)
+        user_one_second_transaction = self.perform_a_transaction(self.user_one.id)
 
-    # def test_user_can_fetch_a_single_transaction(self):
-    #     assert False
+        url = single_transaction_url(self.user_one.id, user_one_second_transaction.data.get('id'))
+        res = self.client_one.get(url)
+
+        user_one_transactions = Transaction.objects.filter(owner__id=self.user_one.id).first()
+        serializer = BaseTransactionSerializer(user_one_transactions, many=False)
+
+        eq_(res.status_code, status.HTTP_200_OK)
+        eq_(res.data, serializer.data)
+
+    def test_user_can_not_fetch_a_single_transaction_that_is_not_theirs(self):
+        user_two_transaction = self.perform_a_transaction(self.user_two.id)
+
+        url = single_transaction_url(self.user_two.id, user_two_transaction.data.get('id'))
+        res = self.client_one.get(url)
+
+        eq_(res.status_code, status.HTTP_403_FORBIDDEN)

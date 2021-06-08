@@ -1,8 +1,10 @@
-from rest_framework import mixins, viewsets, status
+from rest_framework import mixins, viewsets, status, generics
+from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from flite.users.models import Transaction, P2PTransfer
+from flite.users.permissions import IsUserTransactionOnly
 from flite.users.serializers import (
     CreateDepositSerializer,
     CreateWithdrawalSerializer,
@@ -52,8 +54,7 @@ class WithdrawalViewSet(BaseDepositWithdrawalViewSet):
         if str(request_user.id) != owner_id:
             return Response(
                 {
-                    "detail": "Permission denied, you cant withdraw from another account, "
-                              "kindly withdraw from your own account"},
+                    "detail": "You do not have permission to perform this action."},
                 status=status.HTTP_403_FORBIDDEN)
         return self.custom_create(kwargs, request)
 
@@ -70,8 +71,7 @@ class PeerToPeerTransferViewSet(mixins.CreateModelMixin,
         if str(request_user.id) != owner_id:
             return Response(
                 {
-                    "detail": "Permission denied, you cant transfer from another account, "
-                              "kindly transfer from your own account"
+                    "detail": "You do not have permission to perform this action."
                 },
                 status=status.HTTP_403_FORBIDDEN)
         serializer = self.get_serializer(data=request.data)
@@ -106,7 +106,29 @@ class FetchPaginatedTransactionsForUserViewSet(mixins.ListModelMixin,
         if str(request_user.id) != owner_id:
             return Response(
                 {
-                    "detail": "Permission denied, you can't view transactions belonging to another user"
+                    "detail": "You do not have permission to perform this action."
                 },
                 status=status.HTTP_403_FORBIDDEN)
         return super(FetchPaginatedTransactionsForUserViewSet, self).list(request, *args, **kwargs)
+
+
+class FetchSingleTransactionsForUserView(generics.RetrieveAPIView):
+    """
+    single user transactions
+    """
+    queryset = Transaction.objects.all()
+    serializer_class = BaseTransactionSerializer
+    permission_classes = (IsAuthenticated, IsUserTransactionOnly,)
+    lookup_fields = ['account_id', 'transaction_id']
+
+    def get_object(self):
+        queryset = self.get_queryset()
+        queryset = self.filter_queryset(queryset)
+        filter_object = {}
+        filter_mapping = {"account_id": "owner__id", "transaction_id": "id"}
+        for field in self.lookup_fields:
+            if self.kwargs.get(field):
+                filter_object[filter_mapping.get(field)] = self.kwargs[field]
+        obj = get_object_or_404(queryset, **filter_object)
+        self.check_object_permissions(self.request, obj)
+        return obj
