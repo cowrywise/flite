@@ -7,7 +7,7 @@ from flite.users.serializers import UserSerializer
 from rest_framework import serializers
 
 
-class BankTransferSerializer(DynamicFieldsModelSerializer):
+class BankWithdrawalSerializer(DynamicFieldsModelSerializer):
     banking_details = BankSerializer(read_only=True, source="bank")
     reference = serializers.CharField(read_only=True)
     status = serializers.CharField(read_only=True)
@@ -34,11 +34,27 @@ class BankTransferSerializer(DynamicFieldsModelSerializer):
             return value
         raise serializers.ValidationError("Insufficient Funds")
 
-    def validate(self, attrs):
-        checks = TransferManager.run_checks(**attrs)
-        if checks.get("success") is False:
-            raise serializers.ValidationError(checks.get("message"))
-        return attrs
+
+class BankDepositSerializer(DynamicFieldsModelSerializer):
+    banking_details = BankSerializer(read_only=True, source="bank")
+    reference = serializers.CharField(read_only=True)
+    status = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = BankTransfer
+        fields = [
+            "id",
+            "owner",
+            "reference",
+            "status",
+            "amount",
+            "transaction_type",
+            "bank",
+            "new_balance",
+            "banking_details",
+            "created",
+        ]
+        extra_kwargs = {"amount": {"required": True}}
 
 
 class P2PTransferSerializer(DynamicFieldsModelSerializer):
