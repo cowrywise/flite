@@ -31,10 +31,10 @@ jobs:
           time: '5s'
 
       - name: Run DB Migrations
-        run:  docker-compose run --rm django python manage.py migrate
+        run:  docker-compose run --rm flite-django python manage.py migrate
 
       - name: Run Django Tests
-        run:  docker-compose run django python manage.py test
+        run:  docker-compose run flite-django python manage.py test
 
       - name: Tear down the Stack
         run:  docker-compose down
