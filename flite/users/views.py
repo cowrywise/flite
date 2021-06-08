@@ -1,28 +1,38 @@
-from flite.banks.manager import AccountManager
-from flite.banks.serializers import BankSerializer
-from flite.transfers.serializers import BankTransferSerializer
-from flite.transfers.wallets import UserWallet
+from django.shortcuts import get_object_or_404
+
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from flite.banks.manager import AccountManager
+from flite.banks.serializers import BankSerializer
+from flite.transfers.serializers import BankTransferSerializer
+from flite.transfers.wallets import UserWallet
+
 from . import utils
 from .models import NewUserPhoneVerification, User
 from .permissions import IsUserOrReadOnly
-from .serializers import (CreateUserSerializer, SendNewPhonenumberSerializer,
-                          UserSerializer)
+from .serializers import (
+    CreateUserSerializer,
+    SendNewPhonenumberSerializer,
+    UserSerializer,
+)
 
 
 class UserViewSet(
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
     mixins.ListModelMixin,
+    mixins.CreateModelMixin,
     viewsets.GenericViewSet,
 ):
     """
-    Updates and retrieves user accounts
+    view handles retriving updating, listing and creating
+    a users account as well as getting a list of banks
+    a user registers. This viewset also handles withdrawals
+    and deposits to and from the bank.
     """
 
     queryset = User.objects.all()
@@ -31,11 +41,24 @@ class UserViewSet(
 
     def get_permissions(self):
         if self.action in ["list", "retrieve", "Update"]:
+
             permission_classes = self.permission_classes
+
+        elif self.action in ["create"]:
+            permission_classes = [AllowAny]
+
         else:
             permission_classes = [IsAuthenticated]
 
         return [permission() for permission in permission_classes]
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return CreateUserSerializer
+        return self.serializer_class
+
+    def create(self, request, *args, **kwarg):
+        return mixins.CreateModelMixin.create(self, request, *args, **kwarg)
 
     @action(detail=False, methods=["GET"])
     def registered_banks(self, request):
@@ -104,16 +127,6 @@ class UserViewSet(
             },
             status=status.HTTP_400_BAD_REQUEST,
         )
-
-
-class UserCreateViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
-    """
-    Creates user accounts
-    """
-
-    queryset = User.objects.all()
-    serializer_class = CreateUserSerializer
-    permission_classes = (AllowAny,)
 
 
 class SendNewPhonenumberVerifyViewSet(
