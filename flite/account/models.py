@@ -32,6 +32,7 @@ class AllBanks(BaseModel):
 
 
 class Bank(models.Model):
+
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     bank = models.ForeignKey(AllBanks, on_delete=models.CASCADE)
     account_name = models.CharField(max_length=100)
@@ -62,7 +63,7 @@ class Transaction(BaseModel):
         User, on_delete=models.CASCADE,
         related_name="%(app_label)s_%(class)s_related",
         related_query_name="%(app_label)s_%(class)ss",)
-    reference = models.CharField(max_length=10, unique=True, default=randomStringDigits())
+    reference = models.CharField(max_length=10, unique=True)
     status = models.CharField(max_length=9, choices=status_options, default='Pending')
     trans_type = models.CharField(max_length=8, choices=type_options, default='Deposit')
     amount = models.FloatField(default=0.0)
