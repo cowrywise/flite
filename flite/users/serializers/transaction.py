@@ -28,7 +28,7 @@ def validate_and_create_balance(owner_id):
     return balance, created, user
 
 
-class BaseDepositWithdrawalSerializer(serializers.ModelSerializer):
+class BaseTransactionSerializer(serializers.ModelSerializer):
     amount = serializers.DecimalField(max_digits=20, required=True, decimal_places=2)
 
     class Meta:
@@ -37,7 +37,7 @@ class BaseDepositWithdrawalSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'owner', 'reference', 'status', 'transaction_type', 'new_balance', 'created')
 
 
-class CreateDepositSerializer(BaseDepositWithdrawalSerializer):
+class CreateDepositSerializer(BaseTransactionSerializer):
 
     def create(self, validated_data):
         owner_id = self.context.get('user_id', None)
@@ -56,7 +56,7 @@ class CreateDepositSerializer(BaseDepositWithdrawalSerializer):
         return transaction
 
 
-class CreateWithdrawalSerializer(BaseDepositWithdrawalSerializer):
+class CreateWithdrawalSerializer(BaseTransactionSerializer):
 
     def create(self, validated_data):
         owner_id = self.context.get('user_id', None)

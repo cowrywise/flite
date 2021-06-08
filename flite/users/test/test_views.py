@@ -5,8 +5,9 @@ from nose.tools import ok_, eq_
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from faker import Faker
-from ..models import User, UserProfile, Referral, Balance
+from ..models import User, UserProfile, Referral, Balance, Transaction
 from .factories import UserFactory
+from ..serializers import BaseTransactionSerializer
 
 fake = Faker()
 
@@ -95,7 +96,14 @@ def transfer_url(sender_account_id, recipient_account_id):
     """
     Return transfer url
     """
-    return reverse('PeerToPeerTransfer-list', args=[sender_account_id, recipient_account_id])
+    return reverse('peer_to_peer_transfer-list', args=[sender_account_id, recipient_account_id])
+
+
+def transactions_url(account_id):
+    """
+    Return transaction url
+    """
+    return reverse('transaction-list', args=[account_id])
 
 
 def sample_user(username='username', email='user@example.com', password='password'):
@@ -182,8 +190,76 @@ class TestTransactions(APITestCase):
         eq_(user_one_balance.available_balance, 500.00)
         eq_(user_two_balance.available_balance, 2500.00)
 
-    # def test_user_can_fetch_all_transactions(self):
-    #     assert False
-    #
+    def test_user_can_not_make_a_p2p_transfer_due_to_insufficient_funds(self):
+        sample_one_user_balance_before_request = sample_update_balance_for_user(self.user_one, 1000.00)
+        sample_two_user_balance_before_request = sample_update_balance_for_user(self.user_two, 2000.00)
+
+        payload_amount_to_transfer = {'amount': 1100.00}  # amount to transfer is higher than user_one
+        url = transfer_url(self.user_one.id, self.user_two.id)
+        res = self.client_one.post(url, payload_amount_to_transfer)  # transfer from self.user_one to self.user_2
+
+        user_one_balance = Balance.objects.filter(owner=self.user_one.id).first()
+        user_two_balance = Balance.objects.filter(owner=self.user_two.id).first()
+
+        eq_(res.status_code, status.HTTP_400_BAD_REQUEST)
+        eq_(user_one_balance.available_balance, sample_one_user_balance_before_request.available_balance)
+        eq_(user_two_balance.available_balance, sample_two_user_balance_before_request.available_balance)
+
+    def test_user_can_not_make_a_p2p_transfer_from_an_account_that_is_not_theirs(self):
+        sample_one_user_balance_before_request = sample_update_balance_for_user(self.user_one, 1000.00)
+        sample_two_user_balance_before_request = sample_update_balance_for_user(self.user_two, 2000.00)
+
+        payload_amount_to_transfer = {'amount': 500.00}  # amount to transfer is higher than user_one
+        url = transfer_url(self.user_two.id, self.user_one.id)  # sender_account_id is user_two instead of user_one
+        res = self.client_one.post(url, payload_amount_to_transfer)  # transfer from self.user_one to self.user_2
+
+        user_one_balance = Balance.objects.filter(owner=self.user_one.id).first()
+        user_two_balance = Balance.objects.filter(owner=self.user_two.id).first()
+
+        eq_(res.status_code, status.HTTP_403_FORBIDDEN)
+        eq_(user_one_balance.available_balance, sample_one_user_balance_before_request.available_balance)
+        eq_(user_two_balance.available_balance, sample_two_user_balance_before_request.available_balance)
+
+    def test_user_can_fetch_all_transactions(self):
+        self.perform_a_transaction(self.user_one.id)
+        self.perform_a_transaction(self.user_one.id)
+        self.perform_a_transaction(self.user_two.id)
+
+        url = transactions_url(self.user_one.id)
+        url_two = transactions_url(self.user_two.id)
+
+        res = self.client_one.get(url)
+        res_two = self.client_two.get(url_two)
+
+        user_one_transactions = Transaction.objects.filter(owner__id=self.user_one.id)
+        user_two_transactions = Transaction.objects.filter(owner__id=self.user_two.id)
+
+        serializer = BaseTransactionSerializer(user_one_transactions, many=True)
+        serializer_two = BaseTransactionSerializer(user_two_transactions, many=True)
+
+        eq_(res.status_code, status.HTTP_200_OK)
+        eq_(res_two.status_code, status.HTTP_200_OK)
+
+        eq_(len(res.data.get('results')), 2)
+        eq_(len(res_two.data.get('results')), 1)
+
+        eq_(res.data.get('results'), serializer.data)
+        eq_(res_two.data.get('results'), serializer_two.data)
+
+    def test_user_can_not_fetch_all_transactions_that_does_not_belong_to_them(self):
+        self.perform_a_transaction(self.user_one.id)
+        self.perform_a_transaction(self.user_one.id)
+        self.perform_a_transaction(self.user_two.id)
+
+        url = transactions_url(self.user_one.id)
+        res = self.client_two.get(url)
+
+        eq_(res.status_code, status.HTTP_403_FORBIDDEN)
+
+    def perform_a_transaction(self, user_id):
+        payload = {'amount': 1000.00}
+        url = deposit_url(user_id)
+        self.client_one.post(url, payload)
+
     # def test_user_can_fetch_a_single_transaction(self):
     #     assert False

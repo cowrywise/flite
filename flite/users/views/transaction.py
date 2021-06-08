@@ -6,7 +6,8 @@ from flite.users.models import Transaction, P2PTransfer
 from flite.users.serializers import (
     CreateDepositSerializer,
     CreateWithdrawalSerializer,
-    PeerToPeerTransferSerializer
+    PeerToPeerTransferSerializer,
+    BaseTransactionSerializer
 )
 
 
@@ -80,3 +81,32 @@ class PeerToPeerTransferViewSet(mixins.CreateModelMixin,
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_200_OK, headers=headers)
+
+
+class FetchPaginatedTransactionsForUserViewSet(mixins.ListModelMixin,
+                                               viewsets.GenericViewSet):
+    """
+    List user transactions
+    """
+    queryset = Transaction.objects.all()
+    serializer_class = BaseTransactionSerializer
+    permission_classes = (IsAuthenticated,)
+    lookup_field = 'account_id'
+
+    def get_queryset(self):
+        if self.lookup_field is None:
+            return None
+        request_account_id = self.kwargs[self.lookup_field]
+        val = Transaction.objects.filter(owner__id=request_account_id)
+        return val
+
+    def list(self, request, *args, **kwargs):
+        request_user = request.user
+        owner_id = kwargs.get('account_id', None)
+        if str(request_user.id) != owner_id:
+            return Response(
+                {
+                    "detail": "Permission denied, you can't view transactions belonging to another user"
+                },
+                status=status.HTTP_403_FORBIDDEN)
+        return super(FetchPaginatedTransactionsForUserViewSet, self).list(request, *args, **kwargs)

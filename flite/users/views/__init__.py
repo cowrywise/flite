@@ -2,5 +2,6 @@ from flite.users.views.user import UserViewSet, UserCreateAndListViewSet, SendNe
 from flite.users.views.transaction import (
     DepositViewSet,
     WithdrawalViewSet,
-    PeerToPeerTransferViewSet
+    PeerToPeerTransferViewSet,
+    FetchPaginatedTransactionsForUserViewSet
 )

@@ -4,6 +4,18 @@ omit = *migrations*,
        *urls*,
        *test*,
        *admin*,
+       *model*,
+       ./manage.py,
+       ./flite/config/*,
+       ./flite/wsgi.py,
+       *__init__*
+
+[report]
+omit = *migrations*,
+       *urls*,
+       *test*,
+       *admin*,
+       *model*,
        ./manage.py,
        ./flite/config/*,
        ./flite/wsgi.py,
