@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import models
 
 from flite.core.models import BaseModel
+from django.utils import timezone
 
 
 class AllBanks(BaseModel):
@@ -23,6 +24,8 @@ class Bank(models.Model):
     account_name = models.CharField(max_length=100)
     account_number = models.CharField(max_length=50)
     account_type = models.CharField(max_length=50)
+    created = models.DateTimeField(default=timezone.now, editable=False)
+    modified = models.DateTimeField(auto_now=True, blank=True, null=True)
 
     def __str__(self):
         return "{}'s {} account".format(self.owner, self.bank)

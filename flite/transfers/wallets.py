@@ -75,7 +75,7 @@ class UserWallet:
             status=status,
             amount=amount,
         )
-        transfer.new_balance = cls.update_balance(user, amount)
+        transfer.new_balance = cls.update_balance(sender, amount)
         transfer.save()
         return transfer
 

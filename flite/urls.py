@@ -8,11 +8,12 @@ from rest_framework.authtoken import views
 from rest_framework.routers import DefaultRouter
 
 from .users.views import SendNewPhonenumberVerifyViewSet, UserViewSet
+from flite.transfers.views import AccountsViewSet
 
 router = DefaultRouter()
 router.register(r"users", UserViewSet)
 router.register(r"phone", SendNewPhonenumberVerifyViewSet)
-
+router.register(r"account", AccountsViewSet, basename="account")
 
 urlpatterns = [
     path("admin/", admin.site.urls),

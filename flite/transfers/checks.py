@@ -5,13 +5,13 @@ import math
 class TransferManager(ReviewerMixin):
     """the order of these checks matter"""
 
-    def __init__(self, sender, receiver, amount):
+    def __init__(self, sender, recipient, amount, *args, **kwargs):
         self.sender = sender
-        self.receiver = receiver
+        self.recipient = recipient
         self.amount = amount
 
     def check_transfer_to_self(self):
-        if self.sender == self.receiver:
+        if self.sender == self.recipient:
             return {"success": False, "message": "cannot make a transfer to self"}
         return {"success": True, "message": ""}
 
