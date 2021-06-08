@@ -101,36 +101,13 @@ class TransactionViewSet(mixins.ListModelMixin,
     """
     Updates and retrieves user accounts
     """
-    queryset = Transaction.objects.all()
+    queryset = Transaction.objects.all().order_by("created").reverse()
     serializer_class = TransactionSerializer
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         queryset = super().get_queryset() 
         return queryset.filter(owner=self.request.user)
-
-@api_view(["GET"])
-def transaction_detail(request, account_id, pk):
-    try:
-        transaction = P2PTransfer.objects.get(id=pk)
-        if transaction.owner != request.user:
-            return Response({"details": "Not Permitted"}, status.HTTP_403_FORBIDDEN)
-        serializer = P2PTransferSerializer(transaction)
-        return Response(serializer.data)
-    except P2PTransfer.DoesNotExist:
-        try:
-            transaction = Transaction.objects.get(id=pk)
-            if transaction.owner != request.user:
-                return Response({"details": "Not Permitted"}, status.HTTP_403_FORBIDDEN)
-            serializer = TransactionSerializer(transaction)
-            return Response(serializer.data)
-        except Transaction.DoesNotExist:
-            return Response({"details": "Transaction Details Not Found"}, status.HTTP_404_NOT_FOUND)
-    
-    except Exception as e:
-        print(e)
-        return Response({"details": "An Error Occurred. Try Again"}, status.HTTP_400_BAD_REQUEST)
-
 
 class TransferViewSet(mixins.CreateModelMixin,
                         viewsets.GenericViewSet):
@@ -210,3 +187,25 @@ class TransferViewSet(mixins.CreateModelMixin,
         return Response(
             return_serializer.data, status=status.HTTP_201_CREATED, headers=headers
         )
+
+@api_view(["GET"])
+def transaction_detail(request, account_id, pk):
+    try:
+        transaction = P2PTransfer.objects.get(id=pk)
+        if transaction.owner != request.user:
+            return Response({"details": "Not Permitted"}, status.HTTP_403_FORBIDDEN)
+        serializer = P2PTransferSerializer(transaction)
+        return Response(serializer.data)
+    except P2PTransfer.DoesNotExist:
+        try:
+            transaction = Transaction.objects.get(id=pk)
+            if transaction.owner != request.user:
+                return Response({"details": "Not Permitted"}, status.HTTP_403_FORBIDDEN)
+            serializer = TransactionSerializer(transaction)
+            return Response(serializer.data)
+        except Transaction.DoesNotExist:
+            return Response({"details": "Transaction Details Not Found"}, status.HTTP_404_NOT_FOUND)
+    
+    except Exception as e:
+        print(e)
+        return Response({"details": "An Error Occurred. Try Again"}, status.HTTP_400_BAD_REQUEST)

@@ -10,7 +10,6 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('id', 'username', 'first_name', 'last_name',)
         read_only_fields = ('username', )
 
-
 class CreateUserSerializer(serializers.ModelSerializer):
     referral_code = serializers.CharField(required=False)
 
@@ -48,7 +47,6 @@ class CreateUserSerializer(serializers.ModelSerializer):
         fields = ('id', 'username', 'password', 'first_name', 'last_name', 'email', 'auth_token','referral_code')
         read_only_fields = ('auth_token',)
         extra_kwargs = {'password': {'write_only': True}}
-
 
 class SendNewPhonenumberSerializer(serializers.ModelSerializer):
 

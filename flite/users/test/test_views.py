@@ -5,7 +5,7 @@ from nose.tools import ok_, eq_
 from rest_framework.test import APITestCase
 from rest_framework import status
 from faker import Faker
-from ..models import User,UserProfile,Referral
+from ..models import User,UserProfile,Referral, Balance, Transaction, P2PTransfer
 from .factories import UserFactory
 
 fake = Faker()
@@ -78,19 +78,74 @@ class TestUserDetailTestCase(APITestCase):
         eq_(user.first_name, new_first_name)
 
 class TestTransactions(APITestCase):
+    """
+    Test Withdrawals, Deposits and Transactions
+    """
+    def setUp(self):
+        sender = User.objects.create(username="cowry1", email="cowry1@test.com", password="123456")
+        receipient = User.objects.create(username="cowry2", email="cowry2@test.com", password="123456")
+        sender_balance = Balance.objects.get(owner=sender)
+        receipient_balance = Balance.objects.get(owner=receipient)
+        sender_balance.book_balance = 15000
+        sender_balance.available_balance = 15000
+        sender_balance.save()       
+        self.test_transaction = Transaction.objects.create(owner=sender, amount=2000, status="success", new_balance=5000)
+        self.test_p2p_transaction = P2PTransfer.objects.create(
+            owner=sender, 
+            amount=3000, 
+            status="success", 
+            new_balance=2000,
+            sender=sender,
+            receipient=receipient)
+        self.sender = sender
+        self.receipient = receipient
+        self.sender_balance = sender_balance
+        self.receipient_balance = receipient_balance
+        self.payload = {"amount": 5000.00}
+        self.deposit_url = f"/api/v1/users/{sender.id}/deposits"
+        self.withdrawal_url = f"/api/v1/users/{sender.id}/withdrawals"
+        self.transfer_url = f"/api/v1/account/{sender.id}/transfers/{receipient.id}"
+        self.transaction_list_url = f"/api/v1/account/{sender.id}/transactions"
+        self.transaction_detail_url = f"/api/v1/account/{sender.id}/transactions/{self.test_transaction.id}"
+        self.transaction_detail_url_2 = f"/api/v1/account/{sender.id}/transactions/{self.test_p2p_transaction.id}"           
 
     def test_user_can_make_a_deposit(self):
-        assert False
+        self.client.force_authenticate(user=self.sender)
+        sender_initial_balance = self.sender_balance.book_balance
+        res = self.client.post(self.deposit_url, self.payload)
+        eq_(res.status_code, status.HTTP_201_CREATED)
+        eq_(res.json().get("book_balance"), sender_initial_balance+self.payload["amount"])
 
     def test_user_can_make_a_withdrawal(self):
-        assert False
+        self.client.force_authenticate(user=self.sender)
+        initial_balance = self.sender_balance.book_balance
+        res = self.client.post(self.withdrawal_url, self.payload)
+        eq_(res.status_code, status.HTTP_201_CREATED)
+        eq_(res.json().get("book_balance"), initial_balance-self.payload["amount"])
 
     def test_user_can_make_a_p2p_transfer(self):
-        assert False
+        self.client.force_authenticate(user=self.sender)
+        res = self.client.post(self.transfer_url, self.payload)
+        eq_(res.status_code, status.HTTP_201_CREATED)
+        
 
     def test_user_can_fetch_all_transactions(self):
-        assert False
+        self.client.force_authenticate(user=self.sender)
+        self.client.post(self.deposit_url, self.payload)        
+        res = self.client.get(self.transaction_list_url)
+        eq_(res.status_code, status.HTTP_200_OK)
 
     def test_user_can_fetch_a_single_transaction(self):
-        assert False
+        self.client.force_authenticate(user=self.sender)
+        res_1 = self.client.get(self.transaction_detail_url)
+        res_2 = self.client.get(self.transaction_detail_url_2)
+        eq_(res_1.status_code, status.HTTP_200_OK)
+        eq_(res_2.status_code, status.HTTP_200_OK)
+
+    def tearDown(self):
+        self.sender.delete()
+        self.receipient.delete()
+        self.test_transaction.delete()
+        self.test_p2p_transaction.delete()
+    
 
