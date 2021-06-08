@@ -136,16 +136,28 @@ class TestTransactions(APITestCase):
         self.fund_wallet(10_000, bank)
         payload = {"amount": 1500, "bank": bank.pk}
         response = self.client.post(url, payload)
-        import pdb
 
-        pdb.set_trace()
         eq_(response.status_code, status.HTTP_201_CREATED)
 
-    # def test_user_can_make_a_p2p_transfer(self):
-    #     assert False
+    def test_user_can_make_a_p2p_transfer(self):
+        assert False
 
-    # def test_user_can_fetch_all_transactions(self):
-    #     assert False
+    def test_user_can_fetch_all_transactions(self):
+        url = reverse("account-transactions", kwargs={"pk": self.user.pk})
+        bank = self.create_bank_account()
+        self.fund_wallet(10_000, bank)
+        response = self.client.get(url)
+        count = response.json()["count"]
+        eq_(count, 1)
 
-    # def test_user_can_fetch_a_single_transaction(self):
-    #     assert False
+    def test_user_can_fetch_a_single_transaction(self):
+        bank = self.create_bank_account()
+        transaction = self.fund_wallet(10_000, bank)
+        url = reverse(
+            "account-single_transaction",
+            kwargs={"pk": self.user.pk, "transaction_id": transaction.id},
+        )
+        response = self.client.get(url)
+        json_res = response.json()
+        amount = json_res["data"]["amount"]
+        eq_(amount, transaction.amount)
