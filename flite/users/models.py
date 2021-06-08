@@ -184,10 +184,25 @@ class BankTransfer(Transaction):
 
 class P2PTransfer(Transaction):
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sender")
-    receipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name="recipient")
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name="recipient")
 
     class Meta:
         verbose_name_plural = "P2P Transfers"
+
+
+@receiver(pre_save, sender=P2PTransfer)
+def create_reference_peer_to_peer_key(sender,
+                                      instance: P2PTransfer,
+                                      **kwargs):
+    """
+    pre-save a reference in Transaction
+    :param sender:
+    :param instance:
+    :param kwargs:
+    :return:
+    """
+    if not instance.reference:
+        instance.reference = transaction_reference_generator(instance)
 
 
 class Card(models.Model):

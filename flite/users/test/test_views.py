@@ -91,6 +91,13 @@ def withdrawal_url(user_id):
     return reverse('transaction-withdrawal-list', args=[user_id])
 
 
+def transfer_url(sender_account_id, recipient_account_id):
+    """
+    Return transfer url
+    """
+    return reverse('PeerToPeerTransfer-list', args=[sender_account_id, recipient_account_id])
+
+
 def sample_user(username='username', email='user@example.com', password='password'):
     """
     create a sample user
@@ -159,10 +166,22 @@ class TestTransactions(APITestCase):
         res = self.client_one.post(url, payload)
         eq_(res.status_code, status.HTTP_403_FORBIDDEN)
         eq_(sample_balance_for_user_two.available_balance, amount)
-    #
-    # def test_user_can_make_a_p2p_transfer(self):
-    #     assert False
-    #
+
+    def test_user_can_make_a_p2p_transfer(self):
+        sample_update_balance_for_user(self.user_one, 1000.00)
+        sample_update_balance_for_user(self.user_two, 2000.00)
+
+        payload_amount_to_transfer = {'amount': 500.00}
+        url = transfer_url(self.user_one.id, self.user_two.id)
+        res = self.client_one.post(url, payload_amount_to_transfer)  # transfer from self.user_one to self.user_2
+
+        user_one_balance = Balance.objects.filter(owner=self.user_one.id).first()
+        user_two_balance = Balance.objects.filter(owner=self.user_two.id).first()
+
+        eq_(res.status_code, status.HTTP_200_OK)
+        eq_(user_one_balance.available_balance, 500.00)
+        eq_(user_two_balance.available_balance, 2500.00)
+
     # def test_user_can_fetch_all_transactions(self):
     #     assert False
     #

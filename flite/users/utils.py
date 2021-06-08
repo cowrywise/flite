@@ -11,6 +11,8 @@ class TransactionTypes(Enum):
     DEPOSIT = "Deposit"
     WITHDRAW = "Withdraw"
     PEER_TO_PEER = "Peer To Peer"
+    PEER_TO_PEER_DEBIT = "Peer To Peer (Debit)"
+    PEER_TO_PEER_CREDIT = "Peer To Peer (Credit)"
 
     @classmethod
     def choices(cls):

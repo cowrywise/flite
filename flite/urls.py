@@ -10,7 +10,8 @@ from flite.users.views import (
     UserCreateAndListViewSet,
     SendNewPhoneNumberVerifyViewSet,
     DepositViewSet,
-    WithdrawalViewSet
+    WithdrawalViewSet,
+    PeerToPeerTransferViewSet
 )
 
 router = DefaultRouter()
@@ -19,6 +20,9 @@ router.register(r'users', UserCreateAndListViewSet)
 router.register(r'phone', SendNewPhoneNumberVerifyViewSet)
 router.register(r'users/(?P<user_id>[0-9A-Za-z\-]+)/deposits', DepositViewSet, basename='transaction-deposit')
 router.register(r'users/(?P<user_id>[0-9A-Za-z\-]+)/withdrawals', WithdrawalViewSet, basename='transaction-withdrawal')
+router.register(r'account/(?P<sender_account_id>[0-9A-Za-z\-]+)/transfers/(?P<recipient_account_id>[0-9A-Za-z\-]+)',
+                PeerToPeerTransferViewSet,
+                basename='PeerToPeerTransfer')
 
 urlpatterns = [
                   path('admin/', admin.site.urls),
