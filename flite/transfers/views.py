@@ -58,7 +58,7 @@ class AccountsViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["GET"], serializer_class=TransferSerializer)
     def transactions(self, request, pk=None):
         """returns a list of transactions carried out by users"""
-        queryset = Transaction.objects.filter(owner=request.user)
+        queryset = Transaction.objects.filter(owner=request.user).order_by("created")
         page = self.paginate_queryset(queryset)
         serializer = self.serializer_class(page, many=True, exclude=["owner"])
         return self.get_paginated_response(serializer.data)

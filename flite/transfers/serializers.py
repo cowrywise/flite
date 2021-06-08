@@ -61,6 +61,7 @@ class P2PTransferSerializer(DynamicFieldsModelSerializer):
     recipient_details = UserSerializer(read_only=True, source="recipient")
     sender_details = UserSerializer(read_only=True, source="sender")
 
+
     class Meta:
         model = P2PTransfer
         fields = [

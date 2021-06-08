@@ -136,11 +136,17 @@ class TestTransactions(APITestCase):
         self.fund_wallet(10_000, bank)
         payload = {"amount": 1500, "bank": bank.pk}
         response = self.client.post(url, payload)
-
         eq_(response.status_code, status.HTTP_201_CREATED)
 
     def test_user_can_make_a_p2p_transfer(self):
-        assert False
+        recipient = UserFactory()
+        url = reverse(
+            "account-transfers", kwargs={"pk": self.user.pk, "recipient": recipient.id}
+        )
+        bank = self.create_bank_account()
+        self.fund_wallet(10_000, bank)
+        response = self.client.post(url, {"amount": 1000}, format="json")
+        eq_(response.status_code, status.HTTP_201_CREATED)
 
     def test_user_can_fetch_all_transactions(self):
         url = reverse("account-transactions", kwargs={"pk": self.user.pk})
