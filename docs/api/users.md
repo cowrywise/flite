@@ -104,3 +104,167 @@ Content-Type application/json
   "email": "richard@piedpiper.com",
 }
 ```
+
+
+## Deposit Money
+
+**Request**:
+
+`POST` `/users/:user_id/deposits`
+
+PayLoad:
+
+Name       | Type   | Description
+-----------|--------|---
+amount | float | Amount To be Deposited.
+
+
+*Note:*
+
+- **[Authorization Protected](authentication.md)**
+
+**Response**:
+
+```json
+Content-Type application/json
+201 CREATED
+
+{
+  "id": "f7ba16d1-c6fb-439f-b814-ab319e78451c",
+  "book_balance": 343.0912400000002,
+  "available_balance": 343.0912400000002
+}
+```
+
+## Withdrawal
+
+**Request**:
+
+`POST` `/users/:user_id/withdrawals`
+
+PayLoad:
+
+Name       | Type   | Description
+-----------|--------|---
+amount | float | Amount To be Withdrawn.
+
+
+*Note:*
+
+- **[Authorization Protected](authentication.md)**
+
+**Response**:
+
+```json
+Content-Type application/json
+201 CREATED
+
+{
+  "id": "f7ba16d1-c6fb-439f-b814-ab319e78451c",
+  "book_balance": 43.0912400000002,
+  "available_balance": 43.0912400000002
+}
+```
+
+## P2P Transfer
+
+**Request**:
+
+`POST` `/account/:sender_account_id/transfers/:recipient_account_id`
+
+PayLoad:
+
+Name       | Type   | Description
+-----------|--------|---
+amount | float | Amount To be Transferred.
+
+
+*Note:*
+
+- **[Authorization Protected](authentication.md)**
+
+**Response**:
+
+```json
+Content-Type application/json
+201 CREATED
+
+{
+  "id": "f7ba16d1-c6fb-439f-b814-ab319e78451c",
+  "book_balance": 3.091240000000198,
+  "available_balance": 3.091240000000198
+}
+```
+
+## Transaction List
+
+**Request**: Returns A Paginated List Of User Transactions
+
+`GET` `/account/:account_id/transactions`
+
+*Note:*
+
+- **[Authorization Protected](authentication.md)**
+
+**Response**:
+
+```json
+Content-Type application/json
+200 OK
+
+{
+    "count": 11,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "id": "334b608d-21b3-4d12-a3a9-6e9d16bc8883",
+            "created": "2021-06-08T08:34:19+0100",
+            "modified": "2021-06-08T08:34:19+0100",
+            "reference": "42ee4b58577a",
+            "status": "success",
+            "amount": 40.0,
+            "new_balance": 3.091240000000198,
+            "owner": "ddb259fa-3a5c-4f23-824b-efebda16d543"
+        },
+        {
+            "id": "7bc50db0-7d8a-4cd5-9a07-2f7d3262f334",
+            "created": "2021-06-08T08:31:21+0100",
+            "modified": "2021-06-08T08:31:21+0100",
+            "reference": "64b3d7f626af",
+            "status": "success",
+            "amount": 300.0,
+            "new_balance": 43.0912400000002,
+            "owner": "ddb259fa-3a5c-4f23-824b-efebda16d543"
+        }
+    ]
+}
+```
+
+## Transaction Details
+
+**Request**: Get Transaction Details
+
+`GET` `/account/:account_id/transactions/transaction_id`
+
+*Note:*
+
+- **[Authorization Protected](authentication.md)**
+
+**Response**:
+
+```json
+Content-Type application/json
+200 OK
+
+{
+  "id": "334b608d-21b3-4d12-a3a9-6e9d16bc8883",
+  "created": "2021-06-08T08:34:19+0100",
+  "modified": "2021-06-08T08:34:19+0100",
+  "reference": "42ee4b58577a",
+  "status": "success",
+  "amount": 40.0,
+  "new_balance": 3.091240000000198,
+  "owner": "ddb259fa-3a5c-4f23-824b-efebda16d543"
+}
+```
