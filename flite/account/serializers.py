@@ -73,6 +73,21 @@ class TransactionSerializer(serializers.ModelSerializer):
                             'description')
 
 
+class WithdrawalSerializer(serializers.Serializer):
+    amount =  serializers.FloatField(min_value=100)
+    bank = serializers.CharField(help_text="Enter Bank ID (Optional)")
+
+    class Meta:
+        fields = ('amount', 'bank')
+     
+    def validate_bank(self, value):
+        owner = self.context.get('request').user
+        bank = get_valid_bank(Bank, owner, value)
+        return bank
+
+
+
+
 class DepositSerializer(serializers.Serializer):
     amount =  serializers.FloatField(min_value=100)
     card = serializers.CharField(help_text="Enter Card ID (Optional)", required=False)
