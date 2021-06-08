@@ -6,6 +6,7 @@ import django.db.models.deletion
 import django.utils.timezone
 import phonenumber_field.modelfields
 import uuid
+import flite.users.utils
 
 
 class Migration(migrations.Migration):
@@ -83,7 +84,8 @@ class Migration(migrations.Migration):
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('created', models.DateTimeField(default=django.utils.timezone.now, editable=False)),
                 ('modified', models.DateTimeField(auto_now=True, null=True)),
-                ('phone_number', phonenumber_field.modelfields.PhoneNumberField(blank=True, max_length=128, null=True, region=None, unique=True)),
+                ('phone_number', phonenumber_field.modelfields.PhoneNumberField(
+                    blank=True, max_length=128, null=True, region=None, unique=True)),
                 ('verification_code', models.CharField(max_length=30)),
                 ('is_verified', models.BooleanField(default=False)),
                 ('email', models.CharField(max_length=100)),
@@ -113,8 +115,10 @@ class Migration(migrations.Migration):
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('created', models.DateTimeField(default=django.utils.timezone.now, editable=False)),
                 ('modified', models.DateTimeField(auto_now=True, null=True)),
-                ('owner', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='owner', to=settings.AUTH_USER_MODEL)),
-                ('referred', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='referred', to=settings.AUTH_USER_MODEL)),
+                ('owner', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE,
+                 related_name='owner', to=settings.AUTH_USER_MODEL)),
+                ('referred', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE,
+                 related_name='referred', to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'verbose_name': 'User referral',
@@ -126,7 +130,7 @@ class Migration(migrations.Migration):
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('created', models.DateTimeField(default=django.utils.timezone.now, editable=False)),
                 ('modified', models.DateTimeField(auto_now=True, null=True)),
-                ('reference', models.CharField(max_length=200)),
+                ('reference', models.CharField(default=flite.users.utils.generate_ref_code, max_length=200)),
                 ('status', models.CharField(max_length=200)),
                 ('amount', models.FloatField(default=0.0)),
                 ('new_balance', models.FloatField(default=0.0)),
@@ -151,7 +155,8 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='BankTransfer',
             fields=[
-                ('transaction_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='users.Transaction')),
+                ('transaction_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE,
+                 parent_link=True, primary_key=True, serialize=False, to='users.Transaction')),
                 ('bank', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='users.Bank')),
             ],
             options={
@@ -162,9 +167,12 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='P2PTransfer',
             fields=[
-                ('transaction_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='users.Transaction')),
-                ('receipient', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='recipient', to=settings.AUTH_USER_MODEL)),
-                ('sender', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='sender', to=settings.AUTH_USER_MODEL)),
+                ('transaction_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE,
+                 parent_link=True, primary_key=True, serialize=False, to='users.Transaction')),
+                ('receipient', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
+                 related_name='recipient', to=settings.AUTH_USER_MODEL)),
+                ('sender', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
+                 related_name='sender', to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'verbose_name_plural': 'P2P Transfers',
@@ -174,6 +182,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='transaction',
             name='owner',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='transaction', to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
+                                    related_name='transaction', to=settings.AUTH_USER_MODEL),
         ),
     ]

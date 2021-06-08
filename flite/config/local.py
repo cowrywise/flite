@@ -15,7 +15,8 @@ class Local(Common):
         '-s',
         '--nologcapture',
         '--with-coverage',
-        '--with-progressive',
+        # to enable successful testing in local environment
+        # '--with-progressive',
         '--cover-package=flite'
     ]
 
