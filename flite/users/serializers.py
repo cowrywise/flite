@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import User, NewUserPhoneVerification,UserProfile,Referral
+from .models import User, NewUserPhoneVerification,\
+    UserProfile, Referral, Balance
 from . import utils
 
 class UserSerializer(serializers.ModelSerializer):
@@ -68,5 +69,10 @@ class SendNewPhonenumberSerializer(serializers.ModelSerializer):
         fields = ('id', 'phone_number', 'verification_code', 'email',)
         extra_kwargs = {'phone_number': {'write_only': True, 'required':True}, 'email': {'write_only': True}, }
         read_only_fields = ('id', 'verification_code')
-        
+    
+class BalanceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Balance
+        fields = '__all__'
+
     

@@ -33,11 +33,17 @@ class AllBanks(BaseModel):
 
 class Bank(models.Model):
 
+    type_options = [
+        ('Savings', 'Savings'),
+        ('Current', 'Current'),
+        ('Corporate', 'Corporate'),
+        ('Joint', 'Joint')
+    ]
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     bank = models.ForeignKey(AllBanks, on_delete=models.CASCADE)
     account_name = models.CharField(max_length=100)
     account_number = models.CharField(max_length=50, validators=[verify_number],)
-    account_type = models.CharField(max_length=50)
+    account_type = models.CharField(max_length=50, choices=type_options, default='Savings')
 
     class Meta:
         ordering = ["account_name"]
@@ -57,17 +63,22 @@ class Transaction(BaseModel):
     type_options = [
         ('Deposit', 'Deposit'),
         ('Withdraw', 'Withdraw'),
-
+        ('Transfer', 'Transfer'),
+    ]
+    category_options = [
+        ('Credit', 'Credit'),
+        ('Debit', 'Debit'),
     ]
     owner = models.ForeignKey(
-        User, on_delete=models.CASCADE,
-        related_name="%(app_label)s_%(class)s_related",
-        related_query_name="%(app_label)s_%(class)ss",)
-    reference = models.CharField(max_length=10, unique=True)
-    status = models.CharField(max_length=9, choices=status_options, default='Pending')
+        User, on_delete=models.CASCADE, 
+        related_name='transaction')
+    status = models.CharField(max_length=10, choices=status_options, default='Successful')
     trans_type = models.CharField(max_length=8, choices=type_options, default='Deposit')
+    category = models.CharField(max_length=6, choices=category_options, default='Credit')
     amount = models.FloatField(default=0.0)
     charge = models.FloatField(default=0.0)
+    description = models.TextField()
+    reference = models.CharField(max_length=12)
 
     def __str__(self):
         return f"Transaction {self.reference}"
