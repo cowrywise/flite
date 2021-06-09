@@ -52,3 +52,12 @@ def validate_mobile_signup_sms(phone_number, code):
             new_user_code_obj.save()
             return 1, "Code verified"
     return 0, "The code provided is invalid. Kindly check and try again."
+
+
+def generate_transaction_reference():
+    sub_prefix = "ACCT/TRA"
+    prefix = f'{sub_prefix}/'
+    
+    unique_id = str(uuid.uuid1())[:8]
+    return f'{prefix}{unique_id}'
+
