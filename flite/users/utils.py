@@ -78,5 +78,19 @@ def perform_credit_transaction(owner, amount, refrence):
                                              amount=amount, new_balance=balance.available_balance)
 
 
+def perform_debit_transaction(owner, amount, refrence):
+    balance = Balance.objects.get(owner=owner)
+    balance.available_balance = F('available_balance') - amount
+    balance.refresh_from_db()
+
+    """ create a log """
+    transaction = Transaction.objects.create(owner=owner, reference=refrence, status="Approved",
+                                             amount=amount, new_balance=balance.available_balance)
+
+
 def deposit_transaction(user, amount):
     perform_credit_transaction(user, amount, f"Deposit made with ID: {generate_digits(10)}")
+
+
+def withdraw_transaction(user, amount):
+    perform_credit_transaction(user, amount, f"Withdraw made with ID: {generate_digits(10)}")

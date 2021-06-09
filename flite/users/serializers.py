@@ -69,4 +69,4 @@ class SendNewPhonenumberSerializer(serializers.ModelSerializer):
         
 
 class DepositSerializer(serializers.Serializer):
-    amount = serializers.DecimalField(decimal_places=3, max_digits=20,)
+    amount = serializers.DecimalField(decimal_places=3, max_digits=20, )

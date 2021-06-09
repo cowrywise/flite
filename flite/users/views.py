@@ -8,7 +8,7 @@ from .permissions import IsUserOrReadOnly
 from .serializers import CreateUserSerializer, UserSerializer, SendNewPhonenumberSerializer, DepositSerializer
 from rest_framework.views import APIView
 from . import utils
-from .utils import deposit_transaction
+from .utils import deposit_transaction, withdraw_transaction
 
 
 class UserViewSet(mixins.RetrieveModelMixin,
@@ -78,6 +78,22 @@ def deposit_account(request, user_id):
         user = User.objects.filter(id=user_id).first()
         if user:
             deposit_transaction(user, amount)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({"error": "User not found"}, status=status.HTTP_400_OK)
+    else:
+        return Response({"error": serializer.errors}, status=status.HTTP_400_OK)
+
+
+@api_view(['POST'])
+def withdraw_account(request, user_id):
+    data = request.data
+    serializer = DepositSerializer(data=data)
+    if serializer.is_valid():
+        amount = serializer.validated_data.get('amount')
+        user = User.objects.filter(id=user_id).first()
+        if user:
+            withdraw_transaction(user, amount)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response({"error": "User not found"}, status=status.HTTP_400_OK)
