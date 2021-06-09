@@ -126,3 +126,10 @@ class AccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
         fields = '__all__'
+
+
+class TransferSerializer(serializers.Serializer):
+    amount =  serializers.FloatField(min_value=100)
+
+    class Meta:
+        fields = ('amount')

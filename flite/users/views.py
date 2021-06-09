@@ -60,11 +60,11 @@ class UserViewSet(viewsets.ModelViewSet):
                 return Response(data={
                     "message": "Deposit was successfull",
                     "balance": account}, status=201)
-            except Exception as ex:              
+            except Exception as Ex:              
                 return Response(
                         data={
-                            "message": ex,
-                            "balance": ''},
+                            "message": f"{Ex}",
+                            "balance": AccountService.get_user_serialized_account(request.user)},
                         status=422)
         return Response(data={"message": serializer.errors}, status=422)
 

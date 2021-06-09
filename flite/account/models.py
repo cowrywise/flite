@@ -118,7 +118,8 @@ class BankTransfer(Transaction):
 
 
 class P2PTransfer(Transaction):
-    receipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name="recipient")
+    receipient = models.ForeignKey(
+        Account, on_delete=models.CASCADE, related_name="recipient")
 
     class Meta:
         verbose_name_plural = "P2P Transfers"

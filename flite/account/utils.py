@@ -33,6 +33,15 @@ def is_valid_uuid(str):
     else:
         return False
 
+def get_valid_receipient(model, owner, value):
+    if not is_valid_uuid(value):
+        raise serializers.ValidationError(
+    '''Please enter a valid receipient ID(uuid).''')
+    receipient = Account.objects.filter(id=value).first()
+    if not receipient:
+        raise serializers.ValidationError(
+    '''No Receipient with this account ID. Please add a valid receipient ID to proceed.''')
+    return receipient
 
 def get_valid_bank(model, owner, value):
     if not value.isdigit:
@@ -56,3 +65,5 @@ def get_valid_card(model, owner, value):
         raise serializers.ValidationError(
     '''You can only deposit funds from your card. Please add a verified card to proceed.''')
     return card
+
+

@@ -8,6 +8,7 @@ from django.db.models.signals import post_save
 from rest_framework.authtoken.models import Token
 from flite.core.models import BaseModel
 from phonenumber_field.modelfields import PhoneNumberField
+from flite.account.models import Account
 
 
 @python_2_unicode_compatible

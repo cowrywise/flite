@@ -8,7 +8,8 @@ from rest_framework.authtoken import views
 from flite.users.views import UserViewSet, UserCreateViewSet,\
     SendNewPhonenumberVerifyViewSet
 from flite.account.views import BankViewSet, CardViewSet, \
-    CardTransferViewSet, P2PTransferViewSet, BankTransferViewSet
+    CardTransferViewSet, P2PTransferViewSet, BankTransferViewSet, \
+    AccountViewSet
 
 from flite.config.swagger_api_docs import schema_view
 
@@ -20,6 +21,7 @@ router.register(r'users', UserViewSet)
 router.register(r'users', UserCreateViewSet)
 router.register(r'bank', BankViewSet, basename="bank")
 router.register(r'card', CardViewSet, basename="card")
+router.register(r'account', AccountViewSet, basename="account")
 router.register(r'cardtransfer', CardTransferViewSet, basename="cardtransfer")
 router.register(r'p2ptransfer', P2PTransferViewSet, basename="p2ptransfer")
 router.register(r'banktransfer', BankTransferViewSet, basename="banktransfer")
