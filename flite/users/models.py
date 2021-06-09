@@ -23,7 +23,7 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
     if created:
         Token.objects.create(user=instance)
         UserProfile.objects.create(user=instance)
-        Balance.objects.create(owner=instance)
+        Account.objects.create(owner=instance)
 
 class Phonenumber(BaseModel): 
     number = models.CharField(max_length=24)
@@ -82,13 +82,4 @@ class Referral(BaseModel):
         verbose_name = "User referral"
 
 
-class Balance(BaseModel):
 
-    owner = models.ForeignKey(User, on_delete=models.CASCADE)
-    book_balance = models.FloatField(default=0.0)
-    available_balance = models.FloatField(default=0.0)
-    active = models.BooleanField(default=True)
-
-    class Meta:
-        verbose_name = "Balance"
-        verbose_name_plural = "Balances"

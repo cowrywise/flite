@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import AllBanks, Bank, Card, \
+from .models import AllBanks, Bank, Card, Account,\
     CardTransfer, P2PTransfer, BankTransfer, Transaction
 from flite.users.serializers import UserSerializer
 from .utils import is_valid_uuid, get_valid_bank, get_valid_card
@@ -120,3 +120,9 @@ class DepositSerializer(serializers.Serializer):
         owner = self.context.get('request').user
         card = get_valid_card(Card, owner, value)
         return card
+    
+
+class AccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Account
+        fields = '__all__'

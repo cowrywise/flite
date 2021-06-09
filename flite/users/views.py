@@ -1,15 +1,15 @@
-from django.db import transaction as db_transaction
 from rest_framework import viewsets, mixins
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import action
-from .models import User, NewUserPhoneVerification, Balance
+from .models import User, NewUserPhoneVerification
 from flite.core.permissions import IsUserOrReadOnly
 from .serializers import CreateUserSerializer, \
-    UserSerializer, SendNewPhonenumberSerializer, BalanceSerializer
+    UserSerializer, SendNewPhonenumberSerializer
 from rest_framework.views import APIView
 from flite.account.serializers import DepositSerializer, \
     WithdrawalSerializer
+from flite.account.models import Account
 from flite.account.services import AccountService
 
 
@@ -34,21 +34,13 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
 
         if serializer.is_valid():
-            with db_transaction.atomic():
-                balance = Balance.objects.select_for_update().filter(owner=request.user).first()
-                amount = serializer.validated_data.get('amount')
-                balance.available_balance += amount
-                balance.book_balance += amount
-                AccountService.create_deposit_transaction(
-                    serializer.validated_data,
-                    request.user
-                )
-
-                balance.save()
-                balance.refresh_from_db()
-                return Response(data={
+            account = AccountService.create_deposit_transaction(
+                serializer.validated_data,
+                request.user
+            )
+            return Response(data={
                     "message": "Deposit was successfull",
-                    "balance": BalanceSerializer(balance).data}, status=201)
+                    "balance": account}, status=201)
         return Response(data={"message": serializer.errors}, status=422)
 
     @action(
@@ -61,27 +53,19 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
 
         if serializer.is_valid():
-            with db_transaction.atomic():
-                balance = Balance.objects.select_for_update().filter(owner=request.user).first()
-                amount = serializer.validated_data.get('amount')
-                if balance.available_balance < amount:
-                    return Response(
-                        data={
-                            "message": "Transaction failed. Insufficient funds",
-                            "balance": BalanceSerializer(balance).data},
-                        status=422)
-                balance.available_balance -= amount
-                balance.book_balance -= amount
-                AccountService.create_withdraw_transaction(
+            try:
+                account = AccountService.create_withdraw_transaction(
                     serializer.validated_data,
-                    request.user
-                )
-
-                balance.save()
-                balance.refresh_from_db()
+                    request.user)
                 return Response(data={
                     "message": "Deposit was successfull",
-                    "balance": BalanceSerializer(balance).data}, status=201)
+                    "balance": account}, status=201)
+            except Exception as ex:              
+                return Response(
+                        data={
+                            "message": ex,
+                            "balance": ''},
+                        status=422)
         return Response(data={"message": serializer.errors}, status=422)
 
 class UserCreateViewSet(mixins.CreateModelMixin,

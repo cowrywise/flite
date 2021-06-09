@@ -16,6 +16,18 @@ def verify_number(value):
         raise ValidationError('please enter a valid number')
 
 
+class Account(BaseModel):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    book_balance = models.FloatField(default=0.0)
+    available_balance = models.FloatField(default=0.0)
+    active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "Account"
+        verbose_name_plural = "Accounts"
+
+
+
 class AllBanks(BaseModel):
     name = models.CharField(max_length=100)
     acronym = models.CharField(max_length=50)

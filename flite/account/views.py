@@ -2,7 +2,7 @@
 from rest_framework import viewsets
 from rest_framework.response import Response
 from .models import AllBanks, Bank, Card, CardTransfer, P2PTransfer, \
-    BankTransfer
+    BankTransfer, User
 from flite.core.permissions import IsUserOrReadOnly
 from .serializers import AllBanksSerializer, BankSerializer, \
     CardSerializer, CardTransferSerializer, P2PTransferSerializer, \
@@ -73,3 +73,8 @@ class BankTransferViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         serializer.save(reference=randomStringDigits())
+
+
+class AccountViewSet(viewsets.GenericViewSet):
+    serializer_class = BankTransferSerializer
+    permission_classes = [IsUserOrReadOnly]

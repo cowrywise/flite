@@ -1,7 +1,6 @@
 from django.contrib import admin
-from .models import (AllBanks, Bank,
-                     BankTransfer, P2PTransfer, Card)
-
+from .models import (AllBanks, Bank, Account, Transaction,
+                     BankTransfer, P2PTransfer, Card, CardTransfer)
 
 
 @admin.register(Bank)
@@ -14,8 +13,19 @@ class CardAdmin(admin.ModelAdmin):
     list_display = ['id', 'owner', 'number']
     ordering = ['id']
 
+@admin.register(Account)
+class AccountAdmin(admin.ModelAdmin):
+    list_display = ['id', 'owner', 'book_balance', 'available_balance', 'active']
+    ordering = ['-created']
+
+@admin.register(Transaction)
+class TransactionAdmin(admin.ModelAdmin):
+    list_display = ['id', 'owner', 'amount']
+    ordering = ['-created']
+
 
 admin.site.register(AllBanks)
 admin.site.register(BankTransfer)
 admin.site.register(P2PTransfer)
+admin.site.register(CardTransfer)
 

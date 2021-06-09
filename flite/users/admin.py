@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import (User, UserProfile, Phonenumber, Balance,
+from .models import (User, UserProfile, Phonenumber,
                      NewUserPhoneVerification, Referral)
 
 
@@ -13,12 +13,6 @@ class UserAdmin(UserAdmin):
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ['id', 'user', 'referral_code', 'created', 'modified']
-    ordering = ['-created']
-
-
-@admin.register(Balance)
-class BalanceAdmin(admin.ModelAdmin):
-    list_display = ['id', 'owner', 'book_balance', 'available_balance', 'active']
     ordering = ['-created']
 
 
