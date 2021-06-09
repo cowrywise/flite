@@ -1,4 +1,6 @@
 from rest_framework import viewsets, mixins
+from rest_framework import status
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from .models import User, NewUserPhoneVerification
@@ -53,4 +55,15 @@ class SendNewPhonenumberVerifyViewSet(mixins.CreateModelMixin,mixins.UpdateModel
                 'verification_code_status': str(code_status),
                 'message': msg,
         }
-        return Response(content, 200)    
+        return Response(content, 200)
+
+
+@api_view(['GET'])
+def get_user_list(request, user_id):
+    user = User.objects.filter(id=user_id).first()
+    content = {
+        'data': UserSerializer(user).data
+    }
+    return Response(content, status=status.HTTP_200_OK)
+
+
