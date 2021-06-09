@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from .models import User, NewUserPhoneVerification,UserProfile,Referral
+from .models import User, NewUserPhoneVerification, UserProfile, Referral
 from . import utils
+
 
 class UserSerializer(serializers.ModelSerializer):
 
@@ -13,9 +14,7 @@ class UserSerializer(serializers.ModelSerializer):
 class CreateUserSerializer(serializers.ModelSerializer):
     referral_code = serializers.CharField(required=False)
 
-
     def validate_referral_code(self, code):
-        
         self.reffered_profile = UserProfile.objects.filter(referral_code=code.lower())
         is_valid_code = self.reffered_profile.exists()
         if not is_valid_code:
@@ -49,7 +48,6 @@ class CreateUserSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
 
-
 class SendNewPhonenumberSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
@@ -69,4 +67,6 @@ class SendNewPhonenumberSerializer(serializers.ModelSerializer):
         extra_kwargs = {'phone_number': {'write_only': True, 'required':True}, 'email': {'write_only': True}, }
         read_only_fields = ('id', 'verification_code')
         
-    
+
+class DepositSerializer(serializers.Serializer):
+    amount = serializers.DecimalField(decimal_places=3, max_digits=20,)

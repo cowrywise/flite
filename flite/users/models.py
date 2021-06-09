@@ -45,7 +45,6 @@ class UserProfile(BaseModel):
             self.referral_code = self.generate_new_referal_code()
         return super(UserProfile, self).save(*args, **kwargs)
 
-
     def generate_new_referal_code(self):
         """
         Returns a unique passcode
@@ -113,14 +112,14 @@ class Bank(models.Model):
     account_name = models.CharField(max_length=100)
     account_number = models.CharField(max_length=50)
     account_type = models.CharField(max_length=50)
-    
+
+
 class Transaction(BaseModel):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='transaction')
     reference = models.CharField(max_length=200)
     status = models.CharField(max_length=200)
     amount = models.FloatField(default=0.0)
     new_balance = models.FloatField(default=0.0)
-
 
 
 class BankTransfer(Transaction):

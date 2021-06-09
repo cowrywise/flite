@@ -1,5 +1,19 @@
 import uuid
+from random import random
+from string import digits
+
+from django.db.models import F
+
 from flite.users import models
+from flite.users.models import Balance, Transaction
+
+
+def generate_digits(length):
+    code = ""
+    for i in range(length):
+        code += random.choice(digits)
+    return code
+
 
 def generate_new_user_passcode():
     """
@@ -52,3 +66,17 @@ def validate_mobile_signup_sms(phone_number, code):
             new_user_code_obj.save()
             return 1, "Code verified"
     return 0, "The code provided is invalid. Kindly check and try again."
+
+
+def perform_credit_transaction(owner, amount, refrence):
+    balance = Balance.objects.get(owner=owner)
+    balance.available_balance = F('available_balance') + amount
+    balance.refresh_from_db()
+
+    """ create a log """
+    transaction = Transaction.objects.create(owner=owner, reference=refrence, status="Approved",
+                                             amount=amount, new_balance=balance.available_balance)
+
+
+def deposit_transaction(user, amount):
+    perform_credit_transaction(user, amount, f"Deposit made with ID: {generate_digits(10)}")

@@ -5,9 +5,11 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from .models import User, NewUserPhoneVerification
 from .permissions import IsUserOrReadOnly
-from .serializers import CreateUserSerializer, UserSerializer, SendNewPhonenumberSerializer
+from .serializers import CreateUserSerializer, UserSerializer, SendNewPhonenumberSerializer, DepositSerializer
 from rest_framework.views import APIView
 from . import utils
+from .utils import deposit_transaction
+
 
 class UserViewSet(mixins.RetrieveModelMixin,
                   mixins.UpdateModelMixin,
@@ -65,5 +67,21 @@ def get_user_list(request, user_id):
         'data': UserSerializer(user).data
     }
     return Response(content, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def deposit_account(request, user_id):
+    data = request.data
+    serializer = DepositSerializer(data=data)
+    if serializer.is_valid():
+        amount = serializer.validated_data.get('amount')
+        user = User.objects.filter(id=user_id).first()
+        if user:
+            deposit_transaction(user, amount)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({"error": "User not found"}, status=status.HTTP_400_OK)
+    else:
+        return Response({"error": serializer.errors}, status=status.HTTP_400_OK)
 
 
