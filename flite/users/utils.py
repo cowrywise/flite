@@ -94,3 +94,8 @@ def deposit_transaction(user, amount):
 
 def withdraw_transaction(user, amount):
     perform_credit_transaction(user, amount, f"Withdraw made with ID: {generate_digits(10)}")
+
+
+def transfer_transaction(sender, receiver, amount):
+    perform_credit_transaction(receiver, amount, f"Transfer from user with ID:{sender.id} made with ID: {generate_digits(10)}")
+    perform_debit_transaction(sender, amount, f"Transfer to user with ID:{receiver.id} made with ID: {generate_digits(10)}")

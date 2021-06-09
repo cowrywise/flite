@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, NewUserPhoneVerification, UserProfile, Referral
+from .models import User, NewUserPhoneVerification, UserProfile, Referral, Transaction
 from . import utils
 
 
@@ -70,3 +70,9 @@ class SendNewPhonenumberSerializer(serializers.ModelSerializer):
 
 class DepositSerializer(serializers.Serializer):
     amount = serializers.DecimalField(decimal_places=3, max_digits=20, )
+
+
+class UserTransactionListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transaction
+        fields = ['owner', 'reference', 'status', 'amount', 'new_balance', 'created', 'id']
