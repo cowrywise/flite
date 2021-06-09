@@ -10,7 +10,7 @@ on:
     branches: [ "master", "main", "develop" ]
 
   push:
-    branches: [ "master", "main", "develop" ]
+    branches: [ "master", "main" ]
 
 
 jobs:
