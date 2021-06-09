@@ -24,8 +24,12 @@ class TransactionAdmin(admin.ModelAdmin):
     ordering = ['-created']
 
 
+@admin.register(P2PTransfer)
+class P2PTransferAdmin(admin.ModelAdmin):
+    list_display = ['id', 'owner', 'amount', 'receipient']
+    ordering = ['-created']
+
 admin.site.register(AllBanks)
 admin.site.register(BankTransfer)
-admin.site.register(P2PTransfer)
 admin.site.register(CardTransfer)
 

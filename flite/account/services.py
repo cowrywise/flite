@@ -1,11 +1,14 @@
 
 from django.core.exceptions import ValidationError
+from django.core import serializers
 from django.db import transaction as db_transaction
+from django.shortcuts import get_object_or_404
 
 from .models import Bank, Card, BankTransfer, \
-    CardTransfer, Account, P2PTransfer
-from .utils import randomStringDigits
-from .serializers import AccountSerializer
+    CardTransfer, Account, P2PTransfer, Transaction
+from .utils import randomStringDigits, is_valid_uuid
+from .serializers import AccountSerializer, BankTransferSerializer,\
+    P2PTransferSerializer, CardTransferSerializer
 
 
 class AccountService:
@@ -115,4 +118,33 @@ class AccountService:
             account.refresh_from_db()
        
             return AccountSerializer(account).data
+        
+        
+    @classmethod
+    def get_transaction(cls, transaction_id, account_id):
+        if not is_valid_uuid(transaction_id):
+            raise ValidationError('Please enter a valid transaction ID')
+
+
+        if BankTransfer.objects.filter(id=transaction_id).exists():
+            transaction = BankTransfer.objects.get(id=transaction_id)
+            return BankTransferSerializer(
+                transaction.banktransfer
+            )
+        elif CardTransfer.objects.filter(id=transaction_id).exists():
+            transaction = CardTransfer.objects.get(id=transaction_id)
+            return CardTransferSerializer(
+                transaction.cardtransfer
+                )
+        elif P2PTransfer.objects.filter(id=transaction_id).exists():
+            transaction = P2PTransfer.objects.get(id=transaction_id)
+            print(transaction.receipient.id)
+            print(account_id)
+            if str(transaction.receipient.id) == account_id:
+                transaction.p2ptransfer.category = 'Credit'
+            return P2PTransferSerializer(
+                transaction.p2ptransfer
+                )
+        raise ValidationError('No transaction found')
+
 

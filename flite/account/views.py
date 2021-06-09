@@ -94,7 +94,6 @@ class AccountViewSet(viewsets.GenericViewSet):
         receipient_account_id=None,
     ):
 
-
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             amount = serializer.validated_data.get('amount')
@@ -102,26 +101,25 @@ class AccountViewSet(viewsets.GenericViewSet):
                 account = AccountService.transfer(request.user, receipient_account_id, amount)
                 return Response(
                     data={"message": "Your transfer was successful",
-                        "balance": account},
+                          "balance": account},
                     status=201,
                 )
             except Exception as Ex:
-         
+
                 return Response(
                     data={
                         "message": f"{Ex}",
                         "balance": AccountService.get_user_serialized_account(request.user)},
-                        status=422)
+                    status=422)
         return Response(data={"message": serializer.errors}, status=422)
-
 
     @action(
         detail=True,
         url_path="transactions",
         serializer_class=TransactionSerializer,
-        queryset = Transaction.objects.all()
+        queryset=Transaction.objects.all()
     )
-    def transaction(
+    def transactions(
         self,
         request,
         pk=None,
@@ -135,8 +133,19 @@ class AccountViewSet(viewsets.GenericViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-
-
-
-
-        
+    @action(
+        detail=True,
+        url_path="transactions/(?P<transaction_id>[^/.]+)",
+    )
+    def transaction(
+        self,
+        request,
+        pk=None,
+        transaction_id=None,
+    ):
+        try:
+            data = AccountService.get_transaction(transaction_id, pk)
+            return Response(data.data)
+        except Exception as Ex:
+            return Response(
+                data={"message": f"{Ex}"})

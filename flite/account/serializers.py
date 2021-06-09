@@ -65,7 +65,7 @@ class P2PTransferSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = P2PTransfer
-        fields = ('owner', 'reference', 'status', 'trans_type',
+        fields = ('owner', 'reference', 'status', 'category', 'trans_type',
                   'amount', 'charge', 'receipient')
         read_only_fields = ('reference', 'status', 'charge', 'trans_type')
 
@@ -89,9 +89,9 @@ class TransactionSerializer(DynamicFieldsModelSerializer):
     
     class Meta:
         model = Transaction
-        fields = ('owner', 'reference', 'status', 'trans_type', 'category',
+        fields = ('id', 'owner', 'reference', 'status', 'trans_type', 'category',
                   'amount', 'charge', 'description')
-        read_only_fields = ('reference', 'status', 'charge', 'trans_type',
+        read_only_fields = ('id', 'reference', 'status', 'charge', 'trans_type',
                             'description')
 
 
