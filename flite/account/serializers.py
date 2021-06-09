@@ -5,6 +5,27 @@ from flite.users.serializers import UserSerializer
 from .utils import is_valid_uuid, get_valid_bank, get_valid_card
 
 
+class DynamicFieldsModelSerializer(serializers.ModelSerializer):
+    """
+    A ModelSerializer that takes an additional `fields` argument that
+    controls which fields should be displayed.
+    """
+
+    def __init__(self, *args, **kwargs):
+        # Don't pass the 'fields' arg up to the superclass
+        fields = kwargs.pop('fields', None)
+
+        # Instantiate the superclass normally
+        super(DynamicFieldsModelSerializer, self).__init__(*args, **kwargs)
+
+        if fields is not None:
+            # Drop any fields that are not specified in the `fields` argument.
+            allowed = set(fields)
+            existing = set(self.fields)
+            for field_name in existing - allowed:
+                self.fields.pop(field_name)
+
+
 class AllBanksSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -64,10 +85,11 @@ class BankTransferSerializer(serializers.ModelSerializer):
         read_only_fields = ('reference', 'status', 'charge', 'trans_type')
 
 
-class TransactionSerializer(serializers.ModelSerializer):
+class TransactionSerializer(DynamicFieldsModelSerializer):
+    
     class Meta:
         model = Transaction
-        fields = ('owner', 'reference', 'status', 'trans_type',
+        fields = ('owner', 'reference', 'status', 'trans_type', 'category',
                   'amount', 'charge', 'description')
         read_only_fields = ('reference', 'status', 'charge', 'trans_type',
                             'description')

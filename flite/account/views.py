@@ -3,11 +3,12 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import AllBanks, Bank, Card, CardTransfer, P2PTransfer, \
-    BankTransfer, User
+    BankTransfer, User, Transaction
 from flite.core.permissions import IsUserOrReadOnly
 from .serializers import AllBanksSerializer, BankSerializer, \
     CardSerializer, CardTransferSerializer, P2PTransferSerializer, \
-    BankTransferSerializer, AccountSerializer, TransferSerializer
+    BankTransferSerializer, AccountSerializer, TransferSerializer, \
+    TransactionSerializer
 from .utils import randomStringDigits
 from .services import AccountService
 
@@ -112,3 +113,30 @@ class AccountViewSet(viewsets.GenericViewSet):
                         "balance": AccountService.get_user_serialized_account(request.user)},
                         status=422)
         return Response(data={"message": serializer.errors}, status=422)
+
+
+    @action(
+        detail=True,
+        url_path="transactions",
+        serializer_class=TransactionSerializer,
+        queryset = Transaction.objects.all()
+    )
+    def transaction(
+        self,
+        request,
+        pk=None,
+    ):
+        queryset = Transaction.objects.filter(owner=request.user)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+
+
+
+        

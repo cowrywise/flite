@@ -22,7 +22,7 @@ class UserViewSet(viewsets.ModelViewSet):
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (IsUserOrReadOnly,)
+    permission_classes = (IsAuthenticated, IsUserOrReadOnly,)
 
     @action(
         detail=True,
