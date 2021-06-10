@@ -12,7 +12,7 @@ class IsUserOrReadOnly(permissions.BasePermission):
 
         # Write permissions are only allowed to the object owners
 
-        return obj == request.user
+        return obj.owner == request.user
 
 
 class IsOwnerOnly(permissions.BasePermission):
@@ -20,5 +20,4 @@ class IsOwnerOnly(permissions.BasePermission):
     Object-level permission to only allow owners of an object to view or edit.
     """
     def has_object_permission(self, request, view, obj):
-        print(obj)
-        return obj == request.user
+        return obj.owner == request.user
