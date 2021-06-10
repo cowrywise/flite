@@ -17,6 +17,7 @@ urlpatterns = [
     #   path('jet_api/', include('jet_django.urls')),
     path('api/v1/', include(router.urls)),
     path('api-token-auth/', views.obtain_auth_token),
+    path('', include('flite.users.urls')),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 
     # the 'api-root' from django rest-frameworks default router

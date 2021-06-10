@@ -18,6 +18,13 @@ class Local(Common):
         '--with-progressive',
         '--cover-package=flite'
     ]
+    
+    ALLOWED_HOSTS = ["*"]
+    ROOT_URLCONF = 'flite.urls'
+    SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+    WSGI_APPLICATION = 'flite.wsgi.application'
+
+    PAYSTACK_SECRET_KEY = Common.PAYSTACK_SECRET_KEY
 
     # Mail
     EMAIL_HOST = 'localhost'

@@ -8,8 +8,8 @@ interval_unit = "second" if check_interval == 1 else "seconds"
 config = {
     "dbname": os.getenv("POSTGRES_DB", "postgres"),
     "user": os.getenv("POSTGRES_USER", "postgres"),
-    "password": os.getenv("POSTGRES_PASSWORD", "postgres"),
-    "host": os.getenv("DATABASE_URL", "postgres")
+    "password": os.getenv("POSTGRES_PASSWORD", "Mayflower48"),
+    "host": os.getenv("DATABASE_URL", "127.0.0.1")
 }
 
 start_time = time()

@@ -10,6 +10,7 @@ ROOT_DIR = environ.Path(__file__) - 3
 
 environ.Env.read_env(str(ROOT_DIR.path('.env')))
 
+
 class Common(Configuration):
 
     INSTALLED_APPS = (
@@ -75,6 +76,8 @@ class Common(Configuration):
     USE_L10N = True
     USE_TZ = True
     LOGIN_REDIRECT_URL = '/'
+
+    PAYSTACK_SECRET_KEY = os.getenv('PAYSTACK_SECRET_KEY')
 
     # Static files (CSS, JavaScript, Images)
     # https://docs.djangoproject.com/en/2.0/howto/static-files/
