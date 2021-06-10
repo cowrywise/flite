@@ -1,5 +1,15 @@
 import uuid
 from flite.users import models
+import time
+
+# constants
+CREDIT='CREDIT'
+DEBIT='DEBIT'
+
+PENDING='PENDING'
+DECLINED='DECLINED'
+COMPLETED='COMPLETED'
+
 
 def generate_new_user_passcode():
     """
@@ -52,3 +62,34 @@ def validate_mobile_signup_sms(phone_number, code):
             new_user_code_obj.save()
             return 1, "Code verified"
     return 0, "The code provided is invalid. Kindly check and try again."
+
+
+def generate_transaction_refrence_code():
+    """
+    Returns a unique transaction reference 
+    """
+    def _transaction_ref():
+        now = time.time()
+        return 'TRAN-REF-' + str(now).replace('.','')
+    transaction_ref = _transaction_ref()
+    while models.Transaction.objects.filter(reference=transaction_ref).exists():
+        transaction_ref = _transaction_ref()
+    return transaction_ref
+
+
+def log_transaction(**kwargs):
+    transaction = models.Transaction(
+        owner=kwargs['user'],
+        reference=kwargs['reference'],
+        status=kwargs['status'],
+        type=kwargs['type'],
+        amount=kwargs['amount'],
+        new_balance=kwargs['new_balance']
+    )
+
+    transaction.save()
+
+    return transaction
+
+
+    

@@ -115,9 +115,22 @@ class Bank(models.Model):
     account_type = models.CharField(max_length=50)
     
 class Transaction(BaseModel):
+    
+    TRANSACTION_TYPES = [
+        ('CREDIT', 'credit'),
+        ('DEBIT', 'debit')
+    ]
+
+    TRANSACTION_STATUS = [
+        ('PENDING', 'pending'),
+        ('DECLINED', 'declined'),
+        ('COMPLETED', 'completed'),
+    ]
+
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='transaction')
     reference = models.CharField(max_length=200)
-    status = models.CharField(max_length=200)
+    status = models.CharField(max_length=9, choices=TRANSACTION_STATUS, null=False, blank=True)
+    type= models.CharField(max_length=6, choices=TRANSACTION_TYPES, null=False, blank=False)
     amount = models.FloatField(default=0.0)
     new_balance = models.FloatField(default=0.0)
 
