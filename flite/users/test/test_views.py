@@ -5,7 +5,7 @@ from nose.tools import ok_, eq_
 from rest_framework.test import APITestCase
 from rest_framework import status
 from faker import Faker
-from ..models import User,UserProfile,Referral
+from ..models import User,UserProfile,Referral,Balance
 from .factories import UserFactory
 
 fake = Faker()
@@ -17,7 +17,7 @@ class TestUserListTestCase(APITestCase):
     """
 
     def setUp(self):
-        self.url = reverse('user-list')
+        self.url = reverse('signup-list')
         self.user_data = model_to_dict(UserFactory.build())
 
     def test_post_request_with_no_data_fails(self):
@@ -61,7 +61,7 @@ class TestUserDetailTestCase(APITestCase):
 
     def setUp(self):
         self.user = UserFactory()
-        self.url = reverse('user-detail', kwargs={'pk': self.user.pk})
+        self.url = reverse('users-detail', kwargs={'pk': self.user.pk})
         self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.user.auth_token}')
 
     def test_get_request_returns_a_given_user(self):
@@ -78,9 +78,19 @@ class TestUserDetailTestCase(APITestCase):
         eq_(user.first_name, new_first_name)
 
 class TestTransactions(APITestCase):
+    def setUp(self):
+        self.user = UserFactory()
+        self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.user.auth_token}')
+    
 
     def test_user_can_make_a_deposit(self):
-        assert False
+        url = reverse('users-deposits', kwargs={'pk': self.user.pk})
+        payload = {'amount': 3000.00}
+        response = self.client.post(url, payload)
+        b  = Balance.objects.filter(owner=self.user).first()
+        eq_(b.book_balance, 3000.0)
+        eq_(response.status_code, status.HTTP_200_OK)
+
 
     def test_user_can_make_a_withdrawal(self):
         assert False
