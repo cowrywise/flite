@@ -24,6 +24,9 @@ ipdb==0.11
 ipython==7.2.0
 mkdocs==1.0.4
 flake8==3.7.5
+yapf==0.31.0
+isort==5.8.0
+pydocstyle==6.1.1
 
 # Testing
 mock==2.0.0
@@ -40,3 +43,4 @@ django-environ==0.4.5
 phonenumbers
 django-phonenumber-field
 whitenoise
+

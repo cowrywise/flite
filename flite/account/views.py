@@ -1,16 +1,17 @@
-
 from rest_framework import viewsets
-from rest_framework.response import Response
 from rest_framework.decorators import action
-from .models import AllBanks, Bank, Card, CardTransfer, P2PTransfer, \
-    BankTransfer, User, Transaction
+from rest_framework.response import Response
+
 from flite.core.permissions import IsUserOrReadOnly
-from .serializers import AllBanksSerializer, BankSerializer, \
-    CardSerializer, CardTransferSerializer, P2PTransferSerializer, \
-    BankTransferSerializer, AccountSerializer, TransferSerializer, \
-    TransactionSerializer
-from .utils import randomStringDigits
+
+from .models import (Bank, BankTransfer, Card, CardTransfer, P2PTransfer,
+                     Transaction)
+from .serializers import (AccountSerializer, BankSerializer,
+                          BankTransferSerializer, CardSerializer,
+                          CardTransferSerializer, P2PTransferSerializer,
+                          TransactionSerializer, TransferSerializer)
 from .services import AccountService
+from .utils import randomStringDigits
 
 
 class BankViewSet(viewsets.ModelViewSet):
@@ -81,12 +82,10 @@ class AccountViewSet(viewsets.GenericViewSet):
     serializer_class = AccountSerializer
     permission_classes = [IsUserOrReadOnly]
 
-    @action(
-        detail=True,
-        methods=["POST"],
-        url_path="transfers/(?P<receipient_account_id>[^/.]+)",
-        serializer_class=TransferSerializer
-    )
+    @action(detail=True,
+            methods=["POST"],
+            url_path="transfers/(?P<receipient_account_id>[^/.]+)",
+            serializer_class=TransferSerializer)
     def transfers(
         self,
         request,
@@ -98,27 +97,30 @@ class AccountViewSet(viewsets.GenericViewSet):
         if serializer.is_valid():
             amount = serializer.validated_data.get('amount')
             try:
-                account = AccountService.transfer(request.user, receipient_account_id, amount)
+                account = AccountService.transfer(request.user,
+                                                  receipient_account_id,
+                                                  amount)
                 return Response(
-                    data={"message": "Your transfer was successful",
-                          "balance": account},
+                    data={
+                        "message": "Your transfer was successful",
+                        "balance": account
+                    },
                     status=202,
                 )
             except Exception as Ex:
 
-                return Response(
-                    data={
-                        "message": f"{Ex}",
-                        "balance": AccountService.get_user_serialized_account(request.user)},
-                    status=422)
+                return Response(data={
+                    "message":
+                    f"{Ex}",
+                    "balance":
+                    AccountService.get_user_serialized_account(request.user)
+                }, status=422)
         return Response(data={"message": serializer.errors}, status=422)
 
-    @action(
-        detail=True,
-        url_path="transactions",
-        serializer_class=TransactionSerializer,
-        queryset=Transaction.objects.all()
-    )
+    @action(detail=True,
+            url_path="transactions",
+            serializer_class=TransactionSerializer,
+            queryset=Transaction.objects.all())
     def transactions(
         self,
         request,
@@ -136,7 +138,6 @@ class AccountViewSet(viewsets.GenericViewSet):
     @action(
         detail=True,
         url_path="transactions/(?P<transaction_id>[^/.]+)",
-        
     )
     def transaction(
         self,
@@ -148,6 +149,4 @@ class AccountViewSet(viewsets.GenericViewSet):
             data = AccountService.get_transaction(transaction_id, pk)
             return Response(data.data)
         except Exception as Ex:
-            return Response(
-                data={"message": f"{Ex}"},
-                 status=422)
+            return Response(data={"message": f"{Ex}"}, status=422)

@@ -1,19 +1,21 @@
 import os
-import environ
-from os.path import join
 from distutils.util import strtobool
+from os.path import join
+
 import dj_database_url
+import environ
 from configurations import Configuration
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 ROOT_DIR = environ.Path(__file__) - 3
 
 environ.Env.read_env(str(ROOT_DIR.path('.env')))
 
+
 class Common(Configuration):
 
     INSTALLED_APPS = (
-
         'django.contrib.admin',
         'django.contrib.auth',
         'django.contrib.contenttypes',
@@ -21,18 +23,16 @@ class Common(Configuration):
         'django.contrib.messages',
         'django.contrib.staticfiles',
 
-
         # Third party apps
-        'rest_framework',            # utilities for rest apis
+        'rest_framework',  # utilities for rest apis
         'rest_framework.authtoken',  # token authentication
-        'django_filters',            # for filtering rest endpoints
-        'drf_yasg',                   # for API documentation using Swagger
+        'django_filters',  # for filtering rest endpoints
+        'drf_yasg',  # for API documentation using Swagger
 
         # Your apps
         'flite.account',
         'flite.users',
         'flite.core',
-
     )
 
     # https://docs.djangoproject.com/en/2.0/topics/http/middleware/
@@ -55,16 +55,14 @@ class Common(Configuration):
     # Email
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
-    ADMINS = (
-        ('Author', 'flite@example.com'),
-    )
+    ADMINS = (('Author', 'flite@example.com'), )
 
     # Postgres
     DATABASES = {
-        'default': dj_database_url.config(
+        'default':
+        dj_database_url.config(
             default='postgres://postgres:postgres@postgres:5432/flite',
-            conn_max_age=int(os.getenv('POSTGRES_CONN_MAX_AGE', 600))
-        )
+            conn_max_age=int(os.getenv('POSTGRES_CONN_MAX_AGE', 600)))
     }
 
     # General
@@ -121,16 +119,20 @@ class Common(Configuration):
     # https://docs.djangoproject.com/en/2.0/topics/auth/passwords/#module-django.contrib.auth.password_validation
     AUTH_PASSWORD_VALIDATORS = [
         {
-            'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+            'NAME':
+            'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
         },
         {
-            'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+            'NAME':
+            'django.contrib.auth.password_validation.MinimumLengthValidator',
         },
         {
-            'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+            'NAME':
+            'django.contrib.auth.password_validation.CommonPasswordValidator',
         },
         {
-            'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+            'NAME':
+            'django.contrib.auth.password_validation.NumericPasswordValidator',
         },
     ]
 
@@ -144,7 +146,8 @@ class Common(Configuration):
                 'format': '[%(server_time)s] %(message)s',
             },
             'verbose': {
-                'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+                'format':
+                '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
             },
             'simple': {
                 'format': '%(levelname)s %(message)s'
@@ -198,9 +201,12 @@ class Common(Configuration):
 
     # Django Rest Framework
     REST_FRAMEWORK = {
-        'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-        'PAGE_SIZE': int(os.getenv('DJANGO_PAGINATION_LIMIT', 100)),
-        'DATETIME_FORMAT': '%Y-%m-%dT%H:%M:%S%z',
+        'DEFAULT_PAGINATION_CLASS':
+        'rest_framework.pagination.PageNumberPagination',
+        'PAGE_SIZE':
+        int(os.getenv('DJANGO_PAGINATION_LIMIT', 100)),
+        'DATETIME_FORMAT':
+        '%Y-%m-%dT%H:%M:%S%z',
         'DEFAULT_RENDERER_CLASSES': (
             'rest_framework.renderers.JSONRenderer',
             'rest_framework.renderers.BrowsableAPIRenderer',
@@ -214,6 +220,4 @@ class Common(Configuration):
         )
     }
 
-    SWAGGER_SETTINGS = {
-        'LOGIN_URL': '/api-auth/login/'
-    }
+    SWAGGER_SETTINGS = {'LOGIN_URL': '/api-auth/login/'}

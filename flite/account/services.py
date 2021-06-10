@@ -1,23 +1,20 @@
-
 from django.core.exceptions import ValidationError
-from django.core import serializers
 from django.db import transaction as db_transaction
-from django.shortcuts import get_object_or_404
 
-from .models import Bank, Card, BankTransfer, \
-    CardTransfer, Account, P2PTransfer, Transaction
-from .utils import randomStringDigits, is_valid_uuid
-from .serializers import AccountSerializer, BankTransferSerializer,\
-    P2PTransferSerializer, CardTransferSerializer
+from .models import (Account, Bank, BankTransfer, CardTransfer,
+                     P2PTransfer)
+from .serializers import (AccountSerializer, BankTransferSerializer,
+                          CardTransferSerializer, P2PTransferSerializer)
+from .utils import is_valid_uuid, randomStringDigits
 
 
 class AccountService:
-
     @staticmethod
     def get_user_account(user):
-        account = Account.objects.select_for_update().filter(owner=user).first()
+        account = Account.objects.select_for_update().filter(
+            owner=user).first()
         return account
-    
+
     @staticmethod
     def get_user_account_from_id(id):
         account = Account.objects.select_for_update().filter(id=id).first()
@@ -25,7 +22,7 @@ class AccountService:
             raise ValidationError('No receipient found with this id')
 
         return account
-    
+
     @classmethod
     def get_user_serialized_account(cls, user):
         account = Account.objects.filter(owner=user).first()
@@ -34,24 +31,19 @@ class AccountService:
     @staticmethod
     def create_type_based_transaction(card_or_bank, user, amount):
         if isinstance(card_or_bank, Bank):
-            BankTransfer.objects.create(
-                owner=user,
-                trans_type='Deposit',
-                category='Credit',
-                amount=amount,
-                reference=randomStringDigits(),
-                bank=card_or_bank
-            )
+            BankTransfer.objects.create(owner=user,
+                                        trans_type='Deposit',
+                                        category='Credit',
+                                        amount=amount,
+                                        reference=randomStringDigits(),
+                                        bank=card_or_bank)
         else:
-            CardTransfer.objects.create(
-                owner=user,
-                trans_type='Deposit',
-                category='Credit',
-                amount=amount,
-                reference=randomStringDigits(),
-                card=card_or_bank
-            )
-    
+            CardTransfer.objects.create(owner=user,
+                                        trans_type='Deposit',
+                                        category='Credit',
+                                        amount=amount,
+                                        reference=randomStringDigits(),
+                                        card=card_or_bank)
 
     @classmethod
     def create_deposit_transaction(cls, data, user):
@@ -60,9 +52,7 @@ class AccountService:
             account = cls.get_user_account(user)
             account.available_balance += amount
             account.book_balance += amount
-            cls.create_type_based_transaction(
-                card_or_bank, user, amount
-            )
+            cls.create_type_based_transaction(card_or_bank, user, amount)
             account.save()
             account.refresh_from_db()
         return AccountSerializer(account).data
@@ -74,77 +64,58 @@ class AccountService:
             account = cls.get_user_account(user)
             if account.available_balance < amount:
                 raise ValidationError('Transaction failed. Insufficient funds')
-                    
+
             account.available_balance -= amount
             account.book_balance -= amount
-            BankTransfer.objects.create(
-                owner=user,
-                trans_type='Withraw',
-                category='Debit',
-                amount=amount,
-                reference=randomStringDigits(),
-                bank=card_or_bank
-            )
+            BankTransfer.objects.create(owner=user,
+                                        trans_type='Withraw',
+                                        category='Debit',
+                                        amount=amount,
+                                        reference=randomStringDigits(),
+                                        bank=card_or_bank)
             account.save()
             account.refresh_from_db()
             return AccountSerializer(account).data
-    
 
     @classmethod
     def transfer(cls, user, receipient, amount):
         with db_transaction.atomic():
             account = cls.get_user_account(user)
-            print(type(receipient))
             receipient_acc = cls.get_user_account_from_id(receipient)
-            print(receipient_acc)
             if account.available_balance < amount:
                 raise ValidationError('Transaction failed. Insufficient funds')
-                    
+
             account.available_balance -= amount
             account.book_balance -= amount
             receipient_acc.available_balance += amount
             receipient_acc.book_balance += amount
-            P2PTransfer.objects.create(
-                owner=user,
-                trans_type='Transfer',
-                category='Debit',
-                amount=amount,
-                reference=randomStringDigits(),
-                receipient=receipient_acc
-            )
-            
+            P2PTransfer.objects.create(owner=user,
+                                       trans_type='Transfer',
+                                       category='Debit',
+                                       amount=amount,
+                                       reference=randomStringDigits(),
+                                       receipient=receipient_acc)
+
             account.save()
             receipient_acc.save()
             account.refresh_from_db()
-       
+
             return AccountSerializer(account).data
-        
-        
+
     @classmethod
     def get_transaction(cls, transaction_id, account_id):
         if not is_valid_uuid(transaction_id):
             raise ValidationError('Please enter a valid transaction ID')
 
-
         if BankTransfer.objects.filter(id=transaction_id).exists():
             transaction = BankTransfer.objects.get(id=transaction_id)
-            return BankTransferSerializer(
-                transaction.banktransfer
-            )
+            return BankTransferSerializer(transaction.banktransfer)
         elif CardTransfer.objects.filter(id=transaction_id).exists():
             transaction = CardTransfer.objects.get(id=transaction_id)
-            return CardTransferSerializer(
-                transaction.cardtransfer
-                )
+            return CardTransferSerializer(transaction.cardtransfer)
         elif P2PTransfer.objects.filter(id=transaction_id).exists():
             transaction = P2PTransfer.objects.get(id=transaction_id)
-            print(transaction.receipient.id)
-            print(account_id)
             if str(transaction.receipient.id) == account_id:
                 transaction.p2ptransfer.category = 'Credit'
-            return P2PTransferSerializer(
-                transaction.p2ptransfer
-                )
+            return P2PTransferSerializer(transaction.p2ptransfer)
         raise ValidationError('No transaction found')
-
-

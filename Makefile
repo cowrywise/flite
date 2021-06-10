@@ -42,6 +42,12 @@ logs:
 flake8:
 	docker-compose run django sh -c 'flake8'
 
+format:
+	docker-compose run django sh -c 'yapf -r -i .'
+
+sort:
+	docker-compose run django sh -c 'isort .'
+
 report:
 	docker-compose run django sh -c 'coverage report'
 

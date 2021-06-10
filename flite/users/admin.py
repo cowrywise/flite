@@ -1,7 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import (User, UserProfile, Phonenumber,
-                     NewUserPhoneVerification, Referral)
+
+from .models import (NewUserPhoneVerification, Phonenumber, Referral, User,
+                     UserProfile)
 
 
 @admin.register(User)

@@ -14,7 +14,5 @@ class Migration(migrations.Migration):
             model_name='balance',
             name='owner',
         ),
-        migrations.DeleteModel(
-            name='Balance',
-        ),
+        migrations.DeleteModel(name='Balance', ),
     ]

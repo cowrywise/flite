@@ -50,25 +50,11 @@ class Migration(migrations.Migration):
             model_name='transaction',
             name='owner',
         ),
-        migrations.DeleteModel(
-            name='AllBanks',
-        ),
-        migrations.DeleteModel(
-            name='Balance',
-        ),
-        migrations.DeleteModel(
-            name='Bank',
-        ),
-        migrations.DeleteModel(
-            name='BankTransfer',
-        ),
-        migrations.DeleteModel(
-            name='Card',
-        ),
-        migrations.DeleteModel(
-            name='P2PTransfer',
-        ),
-        migrations.DeleteModel(
-            name='Transaction',
-        ),
+        migrations.DeleteModel(name='AllBanks', ),
+        migrations.DeleteModel(name='Balance', ),
+        migrations.DeleteModel(name='Bank', ),
+        migrations.DeleteModel(name='BankTransfer', ),
+        migrations.DeleteModel(name='Card', ),
+        migrations.DeleteModel(name='P2PTransfer', ),
+        migrations.DeleteModel(name='Transaction', ),
     ]
