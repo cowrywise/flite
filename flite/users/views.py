@@ -7,9 +7,11 @@ from .serializers import CreateUserSerializer, UserSerializer, SendNewPhonenumbe
 from rest_framework.views import APIView
 from . import utils
 
-class UserViewSet(mixins.RetrieveModelMixin,
-                  mixins.UpdateModelMixin,
-                  viewsets.GenericViewSet):
+class UserViewSet(
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet):
     """
     Updates and retrieves user accounts
     """
