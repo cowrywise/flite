@@ -15,7 +15,7 @@ class UserViewSet(
     """
     Updates and retrieves user accounts
     """
-    queryset = User.objects.all()
+    queryset = User.objects.all().order_by('username')
     serializer_class = UserSerializer
     permission_classes = (IsUserOrReadOnly,)
 
