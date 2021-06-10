@@ -20,7 +20,18 @@ logger.setLevel(logging.INFO)
 logger.addHandler(logging.StreamHandler())
 
 
-def pg_isready(host, user, password, dbname):
+def pg_isready(host: str, user: str, password: str, dbname: str) -> bool:
+    """ Checks and returns the status of database for connection.
+
+    Args:
+        host: The host of the database.
+        user: The user of the database.
+        password: The database password.
+        dbname: The name of the database.
+
+    Returns:
+        bool: The readiness of the database.
+    """
     while time() - start_time < check_timeout:
         try:
             conn = psycopg2.connect(**vars())

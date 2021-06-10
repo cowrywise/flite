@@ -2,7 +2,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from flite.core.permissions import IsUserOrReadOnly
+from flite.core.permissions import IsUserOrReadOnly, IsOwnerOnly
 
 from .models import (Bank, BankTransfer, Card, CardTransfer, P2PTransfer,
                      Transaction)
@@ -16,10 +16,10 @@ from .utils import randomStringDigits
 
 class BankViewSet(viewsets.ModelViewSet):
     """
-    A simple ViewSet for viewing and editing Banks.
+    A Bank ViewSet with GET, POST, UPDATE and DELETE method.
     """
     serializer_class = BankSerializer
-    permission_classes = [IsUserOrReadOnly]
+    permission_classes = [IsOwnerOnly]
 
     def get_queryset(self):
         return Bank.objects.filter(owner=self.request.user)
@@ -27,10 +27,10 @@ class BankViewSet(viewsets.ModelViewSet):
 
 class CardViewSet(viewsets.ModelViewSet):
     """
-    A simple ViewSet for viewing and editing Cards.
+    A Card ViewSet with GET, POST, UPDATE and DELETE method
     """
     serializer_class = CardSerializer
-    permission_classes = [IsUserOrReadOnly]
+    permission_classes = [IsOwnerOnly]
 
     def get_queryset(self):
         return Card.objects.filter(owner=self.request.user)
@@ -38,10 +38,10 @@ class CardViewSet(viewsets.ModelViewSet):
 
 class CardTransferViewSet(viewsets.ModelViewSet):
     """
-    A simple ViewSet for viewing and editing Cards.
+    A Card Transfer ViewSet with GET, POST, UPDATE and DELETE method
     """
     serializer_class = CardTransferSerializer
-    permission_classes = [IsUserOrReadOnly]
+    permission_classes = [IsOwnerOnly]
 
     def get_queryset(self):
         return CardTransfer.objects.filter(owner=self.request.user)
@@ -52,10 +52,11 @@ class CardTransferViewSet(viewsets.ModelViewSet):
 
 class P2PTransferViewSet(viewsets.ModelViewSet):
     """
-    A simple ViewSet for viewing and editing Cards.
+    A Peer-toper Transfer ViewSet with GET, POST, UPDATE and DELETE method
     """
+
     serializer_class = P2PTransferSerializer
-    permission_classes = [IsUserOrReadOnly]
+    permission_classes = [IsOwnerOnly]
 
     def get_queryset(self):
         return P2PTransfer.objects.filter(owner=self.request.user)
@@ -66,10 +67,11 @@ class P2PTransferViewSet(viewsets.ModelViewSet):
 
 class BankTransferViewSet(viewsets.ModelViewSet):
     """
-    A simple ViewSet for viewing and editing Cards.
+    A Bank Transfer ViewSet with GET, POST, UPDATE and DELETE method
     """
+
     serializer_class = BankTransferSerializer
-    permission_classes = [IsUserOrReadOnly]
+    permission_classes = [IsOwnerOnly]
 
     def get_queryset(self):
         return BankTransfer.objects.filter(owner=self.request.user)
@@ -79,6 +81,18 @@ class BankTransferViewSet(viewsets.ModelViewSet):
 
 
 class AccountViewSet(viewsets.GenericViewSet):
+    """An account ViewSet.
+
+    Methods:
+        transfers: This actions handles peer-to-peer
+            transfer transaction. The authenticated user
+            is sender sender of the funds.
+        transactions: This action returns all the transactions
+            of the authenticated user.
+        transaction: This actions handles the return of a
+            single transaction
+    """
+
     serializer_class = AccountSerializer
     permission_classes = [IsUserOrReadOnly]
 
@@ -92,6 +106,8 @@ class AccountViewSet(viewsets.GenericViewSet):
         pk=None,
         receipient_account_id=None,
     ):
+        """Handles p2p transactions. This method requires the receipient
+        account id and sender account id as path parameters."""
 
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
@@ -126,6 +142,8 @@ class AccountViewSet(viewsets.GenericViewSet):
         request,
         pk=None,
     ):
+        """Returns all transaction of authenticated user. This action
+        requires user account id as path parameter"""
         queryset = Transaction.objects.filter(owner=request.user)
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -145,6 +163,8 @@ class AccountViewSet(viewsets.GenericViewSet):
         pk=None,
         transaction_id=None,
     ):
+        """Returns a detail transaction. This action requires user account
+        id and transaction id as path parameters"""
         try:
             data = AccountService.get_transaction(transaction_id, pk)
             return Response(data.data)

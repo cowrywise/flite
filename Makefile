@@ -25,7 +25,6 @@ start:
 makemigrations:
 	docker-compose run django sh -c 'python manage.py makemigrations'
 	
-	
 migrate:
 	docker-compose run django sh -c 'python manage.py migrate'
 
@@ -38,9 +37,11 @@ createsuperuser:
 logs:
 	docker-compose logs django | tail -100
 
-
 flake8:
 	docker-compose run django sh -c 'flake8'
+
+doc:
+	docker-compose run django sh -c 'pydocstyle .'
 
 format:
 	docker-compose run django sh -c 'yapf -r -i .'

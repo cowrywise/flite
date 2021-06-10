@@ -15,6 +15,8 @@ from flite.core.models import BaseModel
 
 @python_2_unicode_compatible
 class User(AbstractUser):
+    """Flite Custom user model"""
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     def __str__(self):
@@ -23,6 +25,9 @@ class User(AbstractUser):
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_auth_token(sender, instance=None, created=False, **kwargs):
+    """Post signal action that creates a profile and account when a
+    user user is created.
+    """
     if created:
         Token.objects.create(user=instance)
         UserProfile.objects.create(user=instance)
@@ -30,6 +35,8 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
 
 
 class Phonenumber(BaseModel):
+    """ Phone number representation model"""
+
     number = models.CharField(max_length=24)
     is_verified = models.BooleanField(default=False)
     is_primary = models.BooleanField(default=False)
@@ -40,6 +47,12 @@ class Phonenumber(BaseModel):
 
 
 class UserProfile(BaseModel):
+    """A model to represent user profile.
+
+    Relationships:
+        Foreignkey: user(User)
+    """
+
     referral_code = models.CharField(max_length=120)
     user = models.OneToOneField('users.User', on_delete=models.CASCADE)
 
@@ -62,6 +75,9 @@ class UserProfile(BaseModel):
 
 
 class NewUserPhoneVerification(BaseModel):
+    """This model stores the status of user phone
+    number verification status.
+    """
 
     phone_number = PhoneNumberField(unique=True, blank=True, null=True)
     verification_code = models.CharField(max_length=30)
@@ -76,6 +92,12 @@ class NewUserPhoneVerification(BaseModel):
 
 
 class Referral(BaseModel):
+    """A model stores affiliate link of users.
+
+    Relationships:
+        Foreignkey: owner(User), referred(User)
+    """
+
     owner = models.OneToOneField('users.User',
                                  on_delete=models.CASCADE,
                                  related_name="owner")

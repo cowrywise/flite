@@ -15,6 +15,10 @@ from .serializers import (CreateUserSerializer, SendNewPhonenumberSerializer,
 class UserViewSet(viewsets.ModelViewSet):
     """
     Updates and retrieves user accounts
+
+    Methods:
+        deposit: This action handles user deposit.
+        withdrawal: This action handles user withdrawal
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -42,6 +46,19 @@ class UserViewSet(viewsets.ModelViewSet):
             url_path="deposits",
             serializer_class=DepositSerializer)
     def deposit(self, request, pk=None, name='user-deposit'):
+        """Handles user deposit. 
+
+        This action requires either bank id or card id.
+        It will return an error is non is provided or both
+        are provided. The card or bank must be owned by authenticated
+        user
+
+        Params:
+            amount(required): Amount to deposit into account.
+            card: Card ID.
+            bank: Bank ID
+        """
+
         serializer = self.get_serializer(data=request.data)
 
         if serializer.is_valid():
@@ -58,6 +75,16 @@ class UserViewSet(viewsets.ModelViewSet):
             url_path="withdrawals",
             serializer_class=WithdrawalSerializer)
     def withdrawal(self, request, pk=None, name='user-withdrawal'):
+        """Handles user withdraw. 
+
+        This action requires a bank owned by the authenticated user
+        and amount.
+
+        Params:
+            amount: Amount to deposit into account.
+            bank: Bank ID
+        """
+
         serializer = self.get_serializer(data=request.data)
 
         if serializer.is_valid():

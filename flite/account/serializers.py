@@ -4,33 +4,18 @@ from .models import (Account, AllBanks, Bank, BankTransfer, Card, CardTransfer,
                      P2PTransfer, Transaction)
 from .utils import get_valid_bank, get_valid_card
 
-class DynamicFieldsModelSerializer(serializers.ModelSerializer):
-    """
-    A ModelSerializer that takes an additional `fields` argument that
-    controls which fields should be displayed.
-    """
-    def __init__(self, *args, **kwargs):
-        # Don't pass the 'fields' arg up to the superclass
-        fields = kwargs.pop('fields', None)
-
-        # Instantiate the superclass normally
-        super(DynamicFieldsModelSerializer, self).__init__(*args, **kwargs)
-
-        if fields is not None:
-            # Drop any fields that are not specified in the `fields` argument.
-            allowed = set(fields)
-            existing = set(self.fields)
-            for field_name in existing - allowed:
-                self.fields.pop(field_name)
-
 
 class AllBanksSerializer(serializers.ModelSerializer):
+    """An AllBanks ModelSerializer controls which fields should be displayed."""
+
     class Meta:
         model = AllBanks
         fields = ('id', 'name', 'acronym', 'bank_code')
 
 
 class BankSerializer(serializers.ModelSerializer):
+    """A Bank ModelSerializer controls which fields should be displayed."""
+
     owner = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
@@ -40,6 +25,8 @@ class BankSerializer(serializers.ModelSerializer):
 
 
 class CardSerializer(serializers.ModelSerializer):
+    """A Card ModelSerializer controls which fields should be displayed."""
+
     owner = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
@@ -58,6 +45,8 @@ class CardSerializer(serializers.ModelSerializer):
 
 
 class CardTransferSerializer(serializers.ModelSerializer):
+    """A CardTransfer ModelSerializer controls which fields should be displayed."""
+
     owner = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
@@ -68,6 +57,7 @@ class CardTransferSerializer(serializers.ModelSerializer):
 
 
 class P2PTransferSerializer(serializers.ModelSerializer):
+    """A P2P Transfer ModelSerializer controls which fields should be displayed."""
     owner = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
@@ -78,10 +68,20 @@ class P2PTransferSerializer(serializers.ModelSerializer):
 
 
 class BankTransferSerializer(serializers.ModelSerializer):
+    """A BankTransfer ModelSerializer controls which fields should be displayed."""
+
     owner = serializers.HiddenField(default=serializers.CurrentUserDefault())
     bank = serializers.CharField(help_text="Enter Bank ID")
 
-    def validate_bank(self, value):
+    def validate_bank(self, value: str) -> Bank:
+        """ Validate a bank ID and returns bank instance.
+
+        Args:
+            value: The id of the bank to be validated
+
+        Returns:
+            bank: Bank instance with 'value' ID
+        """
         owner = self.context.get('request').user
         bank = get_valid_bank(Bank, owner, value)
         return bank
@@ -100,7 +100,9 @@ class BankTransferSerializer(serializers.ModelSerializer):
         read_only_fields = ('reference', 'status', 'charge', 'trans_type')
 
 
-class TransactionSerializer(DynamicFieldsModelSerializer):
+class TransactionSerializer(serializers.ModelSerializer):
+    """A Transaction ModelSerializer controls which fields should be displayed."""
+
     class Meta:
         model = Transaction
         fields = ('id', 'owner', 'reference', 'status', 'trans_type',
@@ -110,6 +112,8 @@ class TransactionSerializer(DynamicFieldsModelSerializer):
 
 
 class WithdrawalSerializer(serializers.Serializer):
+    """A Withdrawal Serializer controls which fields should be displayed."""
+
     amount = serializers.FloatField(min_value=100)
     bank = serializers.CharField(help_text="Enter Bank ID (Optional)")
 
@@ -117,12 +121,22 @@ class WithdrawalSerializer(serializers.Serializer):
         fields = ('amount', 'bank')
 
     def validate_bank(self, value):
+        """ Validate a bank ID and returns bank instance.
+
+        Args:
+            value: The id of the bank to be validated
+
+        Returns:
+            bank: Bank instance with 'value' ID
+        """
         owner = self.context.get('request').user
         bank = get_valid_bank(Bank, owner, value)
         return bank
 
 
 class DepositSerializer(serializers.Serializer):
+    """A Deposit Serializer controls which fields should be displayed."""
+
     amount = serializers.FloatField(min_value=100)
     card = serializers.CharField(help_text="Enter Card ID (Optional)",
                                  required=False)
@@ -133,6 +147,14 @@ class DepositSerializer(serializers.Serializer):
         fields = ('amount', 'card', 'bank')
 
     def validate(self, data):
+        """ Validate and return user inputed deposit data.
+
+        Args:
+            data: A dictionary containing data to be validated
+
+        Returns:
+            data: Validated Data
+        """
         card = data.get('card')
         bank = data.get('bank')
         if bank and card:
@@ -145,23 +167,43 @@ class DepositSerializer(serializers.Serializer):
         return data
 
     def validate_bank(self, value):
+        """ Validate a bank ID and returns bank instance.
+
+        Args:
+            value: The id of the bank to be validated
+
+        Returns:
+            bank: Bank instance with 'value' ID
+        """
         owner = self.context.get('request').user
         bank = get_valid_bank(Bank, owner, value)
         return bank
 
     def validate_card(self, value):
+        """ Validate a card ID and returns card instance.
+
+        Args:
+            value: The id of the card to be validated
+
+        Returns:
+            card: Card instance with 'value' ID
+        """
         owner = self.context.get('request').user
         card = get_valid_card(Card, owner, value)
         return card
 
 
 class AccountSerializer(serializers.ModelSerializer):
+    """A Account ModelSerializer controls which fields should be displayed."""
+
     class Meta:
         model = Account
         fields = '__all__'
 
 
 class TransferSerializer(serializers.Serializer):
+    """A Transfer Serializer controls which fields should be displayed."""
+
     amount = serializers.FloatField(min_value=100)
 
     class Meta:

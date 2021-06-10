@@ -3,16 +3,19 @@ import re
 import string
 
 from rest_framework import serializers
-from flite.account.models import Account
+from flite.account.models import Account, User, Bank, \
+    Card
 
 
 def randomStringDigits(stringLength=10):
+    """Create and return random strings"""
     lettersAndDigits = 'FL' + string.ascii_letters + string.digits
     return ''.join(
         random.choice(lettersAndDigits) for i in range(stringLength))
 
 
-def is_valid_uuid(str):
+def is_valid_uuid(value: str):
+    """Validate a string is uuid"""
 
     # Regex to check valid
     # GUID (Globally Unique Identifier)
@@ -23,18 +26,18 @@ def is_valid_uuid(str):
 
     # If the string is empty
     # return false
-    if str is None:
+    if value is None:
         return False
 
     # Return if the string
     # matched the ReGex
-    if (re.search(p, str)):
+    if (re.search(p, value)):
         return True
     else:
         return False
 
 
-def get_valid_receipient(model, owner, value):
+def get_valid_receipient(model, value: str) -> Account:
     if not is_valid_uuid(value):
         raise serializers.ValidationError(
             '''Please enter a valid receipient ID(uuid).''')
@@ -46,7 +49,22 @@ def get_valid_receipient(model, owner, value):
     return receipient
 
 
-def get_valid_bank(model, owner, value):
+def get_valid_bank(model, owner: User, value) -> Bank:
+    """Get and return user bank
+
+    Args:
+        value: The id of the bank to be validated
+        owner: The owner of the bank
+
+    Returns:
+        bank: Bank instance with 'value' ID
+
+    Exceptions:
+        ValidationError: This error is raised if an
+            invalid bank ID was entered or bank does
+            not belong to user instance
+    """
+
     if not value.isdigit:
         raise serializers.ValidationError(
             '''Please enter a valid Bank ID(int).''')
@@ -59,7 +77,21 @@ def get_valid_bank(model, owner, value):
     return bank
 
 
-def get_valid_card(model, owner, value):
+def get_valid_card(model, owner: User, value: str) -> Card:
+    """Get and return user card
+
+    Args:
+        value: The id of the card to be validated
+        owner: The owner of the card
+
+    Returns:
+        card: Card instance with 'value' ID
+
+    Exceptions:
+        ValidationError: This error is raised if an
+            invalid card ID was entered or card does
+            not belong to user instance
+    """
     if not is_valid_uuid(value):
         raise serializers.ValidationError(
             '''Please enter a valid Card ID(uuid).''')
