@@ -102,7 +102,7 @@ class AccountViewSet(viewsets.GenericViewSet):
                 return Response(
                     data={"message": "Your transfer was successful",
                           "balance": account},
-                    status=201,
+                    status=202,
                 )
             except Exception as Ex:
 
@@ -136,6 +136,7 @@ class AccountViewSet(viewsets.GenericViewSet):
     @action(
         detail=True,
         url_path="transactions/(?P<transaction_id>[^/.]+)",
+        
     )
     def transaction(
         self,
@@ -148,4 +149,5 @@ class AccountViewSet(viewsets.GenericViewSet):
             return Response(data.data)
         except Exception as Ex:
             return Response(
-                data={"message": f"{Ex}"})
+                data={"message": f"{Ex}"},
+                 status=422)

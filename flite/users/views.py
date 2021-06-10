@@ -1,4 +1,4 @@
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets, mixins, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import action
@@ -24,13 +24,28 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = (IsAuthenticated, IsUserOrReadOnly,)
 
+
+    def get_permissions(self):
+        if self.action in ["list", "retrieve", "Update"]:
+            permission_classes = self.permission_classes
+        elif self.action in ["create"]:
+            permission_classes = [AllowAny]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return CreateUserSerializer
+        return self.serializer_class
+
     @action(
         detail=True,
         methods=['post'],
         url_path="deposits",
         serializer_class=DepositSerializer
     )
-    def deposit(self, request, pk=None):
+    def deposit(self, request, pk=None, name='user-deposit'):
         serializer = self.get_serializer(data=request.data)
 
         if serializer.is_valid():
@@ -40,16 +55,16 @@ class UserViewSet(viewsets.ModelViewSet):
             )
             return Response(data={
                     "message": "Deposit was successfull",
-                    "balance": account}, status=201)
+                    "balance": account}, status=status.HTTP_201_CREATED)
         return Response(data={"message": serializer.errors}, status=422)
-
+    
     @action(
         detail=True,
         methods=['post'],
         url_path="withdrawals",
         serializer_class=WithdrawalSerializer
     )
-    def withdrawal(self, request, pk=None):
+    def withdrawal(self, request, pk=None, name='user-withdrawal' ):
         serializer = self.get_serializer(data=request.data)
 
         if serializer.is_valid():
@@ -67,15 +82,6 @@ class UserViewSet(viewsets.ModelViewSet):
                             "balance": AccountService.get_user_serialized_account(request.user)},
                         status=422)
         return Response(data={"message": serializer.errors}, status=422)
-
-class UserCreateViewSet(mixins.CreateModelMixin,
-                        viewsets.GenericViewSet):
-    """
-    Creates user accounts
-    """
-    queryset = User.objects.all()
-    serializer_class = CreateUserSerializer
-    permission_classes = (AllowAny,)
 
 
 class SendNewPhonenumberVerifyViewSet(

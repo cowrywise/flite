@@ -5,8 +5,7 @@ from django.contrib import admin
 from django.views.generic.base import RedirectView
 from rest_framework.routers import DefaultRouter
 from rest_framework.authtoken import views
-from flite.users.views import UserViewSet, UserCreateViewSet,\
-    SendNewPhonenumberVerifyViewSet
+from flite.users.views import UserViewSet, SendNewPhonenumberVerifyViewSet
 from flite.account.views import BankViewSet, CardViewSet, \
     CardTransferViewSet, P2PTransferViewSet, BankTransferViewSet, \
     AccountViewSet
@@ -18,7 +17,6 @@ from flite.config.swagger_api_docs import schema_view
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
-router.register(r'users', UserCreateViewSet)
 router.register(r'bank', BankViewSet, basename="bank")
 router.register(r'card', CardViewSet, basename="card")
 router.register(r'account', AccountViewSet, basename="account")

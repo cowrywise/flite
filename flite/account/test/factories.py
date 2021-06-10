@@ -1,18 +1,43 @@
 import factory
+from flite.users.test.factories import UserFactory
 
 
-class UserFactory(factory.django.DjangoModelFactory):
+class AllBankFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = 'account.AllBanks'
+    name = factory.Faker('name')
+    acronym = factory.Faker('word')
+    bank_code = factory.Faker('word')
+
+
+class BankFactory(factory.django.DjangoModelFactory):
 
     class Meta:
-        model = 'users.User'
-        django_get_or_create = ('username',)
+        model = 'account.Bank'
 
+
+    owner = factory.SubFactory(UserFactory)
+    bank = factory.SubFactory(AllBankFactory)
+    account_name =  factory.Faker('name')
+    account_number =  factory.Faker('random_number')
+    account_type =  'Saving'
+
+
+class CardFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = 'account.Card'
+        django_get_or_create = ('id',)
     id = factory.Faker('uuid4')
-    username = factory.Sequence(lambda n: f'testuser{n}')
-    password = factory.Faker('password', length=10, special_chars=True, digits=True,
-                             upper_case=True, lower_case=True)
-    email = factory.Faker('email')
-    first_name = factory.Faker('first_name')
-    last_name = factory.Faker('last_name')
+    owner = factory.SubFactory(UserFactory)
+   
+    authorization_code =  factory.Faker('word')
+    ctype =  factory.Faker('word')
+    cbin =  factory.Faker('word')
+    cbrand =  factory.Faker('word')
+    name =  factory.Faker('name')
+    number =  factory.Faker('random_number')
+    expiry_month =  '12'
+    expiry_year =  '2022'
     is_active = True
-    is_staff = False
+    is_deleted = False
