@@ -46,7 +46,7 @@ class UserViewSet(viewsets.ModelViewSet):
             url_path="deposits",
             serializer_class=DepositSerializer)
     def deposit(self, request, pk=None, name='user-deposit'):
-        """Handles user deposit. 
+        """Handles user deposit.
 
         This action requires either bank id or card id.
         It will return an error is non is provided or both
@@ -75,7 +75,7 @@ class UserViewSet(viewsets.ModelViewSet):
             url_path="withdrawals",
             serializer_class=WithdrawalSerializer)
     def withdrawal(self, request, pk=None, name='user-withdrawal'):
-        """Handles user withdraw. 
+        """Handles user withdraw.
 
         This action requires a bank owned by the authenticated user
         and amount.

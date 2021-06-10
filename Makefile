@@ -40,9 +40,6 @@ logs:
 flake8:
 	docker-compose run django sh -c 'flake8'
 
-doc:
-	docker-compose run django sh -c 'pydocstyle .'
-
 format:
 	docker-compose run django sh -c 'yapf -r -i .'
 
