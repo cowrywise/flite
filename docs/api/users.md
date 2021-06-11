@@ -123,14 +123,14 @@ _Note:_
 
 ```json
 Content-Type application/json
-201 CREATED
+200 OK
 {
   "status": "success",
   "message": "amount deposited successfully",
   "data": {
-    "first_name": "",
-    "last_name": "",
-    "available_balance": ""
+    "first_name": "john",
+    "last_name": "smith",
+    "available_balance": 50.0320000000193
   }
 }
 ```
@@ -156,14 +156,120 @@ _Note:_
 
 ```json
 Content-Type application/json
-201 CREATED
+200 OK
 {
   "status": "success",
   "message": "amount withdrawn successfully...no more insufficient funds😀",
   "data": {
-    "first_name": "",
-    "last_name": "",
-    "available_balance": ""
+    "first_name": "john",
+    "last_name": "smith",
+    "available_balance": 20.0320000000193
+  }
+}
+```
+
+## Transaction list (single user)
+
+**Request**: Retrieves the list of all transactions made by a user
+
+`GET` `/account/:account_id/transactions`
+
+_Note:_
+
+- **[Authorization Protected](authentication.md)**
+
+**Response**:
+
+```json
+Content-Type application/json
+200 OK
+{
+    "status": "success",
+    "message": "user transactions retrieved successfully",
+    "data": [
+        {
+            "id": "125f029c-13a2-3fe9-v5b3-1c2f36ec3903",
+            "created": "2021-06-11T13:35:10+0100",
+            "modified": "2021-06-11T13:35:10+0100",
+            "reference": "16ba43a85109e",
+            "status": "success",
+            "amount": 70.0,
+            "new_balance": 30.0340000000378,
+            "owner": "efb213fe-5c5e-3b10-399e-ccbede14d543"
+        },
+        {
+            "id": "3ec50dc0-7d5a-9ee7-2b47-4f3c3543c213",
+            "created": "2021-06-11T13:45:22+0100",
+            "modified": "2021-06-11T13:45:22+0100",
+            "reference": "64c3d4a646ce",
+            "status": "success",
+            "amount": 150.0,
+            "new_balance": 100.0223400000001,
+            "owner": "efb213fe-5c5e-3b10-399e-ccbede14d543"
+        }
+    ]
+}
+```
+
+## Transaction details (single user)
+
+**Request**: Retrieve details of a single transaction performed by a user
+
+`GET` `/account/:account_id/transactions/transaction_id`
+
+_Note:_
+
+- **[Authorization Protected](authentication.md)**
+
+**Response**:
+
+```json
+Content-Type application/json
+200 OK
+{
+  "status": "success",
+  "message": "user transaction retrieved successfully",
+  "data": {
+    "id": "3ec50dc0-7d5a-9ee7-2b47-4f3c3543c213",
+    "created": "2021-06-11T13:45:22+0100",
+    "modified": "2021-06-11T13:45:22+0100",
+    "reference": "64c3d4a646ce",
+    "status": "success",
+    "amount": 150.0,
+    "new_balance": 100.0223400000001,
+    "owner": "efb213fe-5c5e-3b10-399e-ccbede14d543"
+  }
+}
+```
+
+## P2P Transfer
+
+**Request**: allows for transfer of money between users
+
+`POST` `/account/:sender_account_id/transfers/:recipient_account_id`
+
+PayLoad:
+
+| Name   | Type  | Description               |
+| ------ | ----- | ------------------------- |
+| amount | float | Amount to be transferred. |
+
+_Note:_
+
+- **[Authorization Protected](authentication.md)**
+
+**Response**:
+
+```json
+Content-Type application/json
+200 OK
+{
+  "status": "success",
+  "message": "transfer successful",
+  "data": {
+    "id": "3ec50dc0-7d5a-9ee7-2b47-4f3c3543c213",
+    "book_balance": 100.0223400000001,
+    "available_balance": 100.0223400000001
   }
 }
 ```

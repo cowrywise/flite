@@ -24,11 +24,11 @@ urlpatterns = [
     path('api/v1/users/<str:user_id>/deposits', DepositViewSet.as_view({'post': 'create'}), name="deposit"),
     path('api/v1/users/<str:user_id>/withdrawals',
          WithdrawalViewSet.as_view({'post': 'create'}), name="withdrawal"),
-    # path('api/v1/account/<str:sender_account_id>/transfers/<str:receipient_account_id>',
+    # path('api/v1/account/<str:sender_account_id>/transfers/<str:recipient_account_id>',
     #      TransferViewSet.as_view({'post': 'create'}), name="transfer"),
     path('api/v1/account/<str:account_id>/transactions',
          all_transactions, name="transactions"),
-    path('api/v1/account/<str:account_id>/transactions/<str:pk>',
+    path('api/v1/account/<str:account_id>/transactions/<str:transaction_id>',
          transaction_detail, name="single-transaction-detail"),
 
     # the 'api-root' from django rest-frameworks default router
