@@ -5,7 +5,7 @@ from nose.tools import ok_, eq_
 from rest_framework.test import APITestCase
 from rest_framework import status
 from faker import Faker
-from ..models import User,UserProfile,Referral,Balance
+from ..models import User,UserProfile,Referral,Balance, Transaction
 from .factories import UserFactory
 
 fake = Faker()
@@ -82,6 +82,10 @@ class TestTransactions(APITestCase):
         self.user = UserFactory()
         self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.user.auth_token}')
     
+    def tearDown(self):
+        User.objects.all().delete()
+        Transaction.objects.all().delete()
+        Balance.objects.all().delete()
 
     def test_user_can_make_a_deposit(self):
         url = reverse('users-deposits', kwargs={'pk': self.user.pk})
@@ -93,7 +97,47 @@ class TestTransactions(APITestCase):
 
 
     def test_user_can_make_a_withdrawal(self):
-        assert False
+        # deposit 
+        deposit_url = reverse('users-deposits', kwargs={'pk': self.user.pk})
+        deposit_payload = {'amount': 6000}
+        self.client.post(deposit_url, deposit_payload)
+        
+        balance_before = Balance.objects.get(owner=self.user)
+
+        # withdrawal
+        withdrawal_url = reverse('users-withdrawals', kwargs={'pk': self.user.pk})
+        withdrawal_payload = {"amount": 700.00}
+
+        response = self.client.post(withdrawal_url, withdrawal_payload)
+
+        balance_after = Balance.objects.get(owner=self.user)
+
+        eq_(response.status_code, status.HTTP_200_OK)
+        eq_(response.json()['message'], 'Withdrawal Successful')
+        not eq_(balance_before.book_balance, balance_before.book_balance)
+        self.assertLess(balance_before.available_balance, balance_after.available_balance)
+
+    def test_user_with_insufficient_can_not_make_a_withdrawal(self):
+        # deposit 
+        deposit_url = reverse('users-deposits', kwargs={'pk': self.user.pk})
+        deposit_payload = {'amount': 600}
+        self.client.post(deposit_url, deposit_payload)
+        
+        balance_before = Balance.objects.get(owner=self.user)
+
+        # withdrawal
+        withdrawal_url = reverse('users-withdrawals', kwargs={'pk': self.user.pk})
+        withdrawal_payload = {"amount": 700.00}
+
+        response = self.client.post(withdrawal_url, withdrawal_payload)
+
+        balance_after = Balance.objects.get(owner=self.user)
+
+        eq_(response.status_code, status.HTTP_403_FORBIDDEN)
+        eq_(response.json()['message'], 'Insufficient funds')
+        eq_(balance_before.book_balance, balance_after.book_balance)
+
+       
 
     def test_user_can_make_a_p2p_transfer(self):
         assert False
