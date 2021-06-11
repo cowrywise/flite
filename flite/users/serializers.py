@@ -77,6 +77,7 @@ class BalanceSerializer(serializers.ModelSerializer):
         model = Balance
         fields = ('id', 'book_balance', 'available_balance')
 
+
 class DepositSerializer(serializers.ModelSerializer):
     amount = serializers.FloatField()
 
@@ -151,3 +152,9 @@ class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = '__all__'
+
+class Bank(serializers.ModelSerializer):
+
+    class Meta:
+        model = Balance
+        fields = '__all__'        
