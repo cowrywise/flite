@@ -92,4 +92,6 @@ def log_transaction(**kwargs):
     return transaction
 
 
-    
+def check_balance(user):
+    b = models.Balance.objects.get(owner=user)
+    return b.available_balance
