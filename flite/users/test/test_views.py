@@ -1,3 +1,4 @@
+from os import stat
 from django.urls import reverse
 from django.forms.models import model_to_dict
 from django.contrib.auth.hashers import check_password
@@ -175,9 +176,15 @@ class TestTransactions(APITestCase):
         eq_(response.json()['message'], 'You can not transfer to the same account')
 
 
-
     def test_user_can_fetch_all_transactions(self):
-        assert False
+        user = self.user
+        account = Balance.objects.get(owner=user)
+        url = reverse('accounts-transactions', kwargs={'pk': account.pk})
+
+        response = self.client.get(url)
+        eq_(response.status_code, status.HTTP_200_OK)
+        eq_(response.json()['message'], 'success')
+        eq_(len(response.json()['results']), 0)
 
     def test_user_can_fetch_a_single_transaction(self):
         assert False
