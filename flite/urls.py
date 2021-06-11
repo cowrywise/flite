@@ -5,11 +5,12 @@ from django.contrib import admin
 from django.views.generic.base import RedirectView
 from rest_framework.routers import DefaultRouter
 from rest_framework.authtoken import views
-from .users.views import UserViewSet, UserCreateViewSet, SendNewPhonenumberVerifyViewSet, P2PTransferView
+from .users.views import UserViewSet, UserCreateViewSet, SendNewPhonenumberVerifyViewSet, P2PTransferView, TransactionViewSet
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='users')
 router.register(r'signup', UserCreateViewSet, basename='signup')
-router.register(r'phone', SendNewPhonenumberVerifyViewSet)
+router.register(r'phone', SendNewPhonenumberVerifyViewSet),
+router.register(r'accounts', TransactionViewSet, base_name='accounts')
 
 
 urlpatterns = [

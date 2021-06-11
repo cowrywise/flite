@@ -2,6 +2,7 @@ import uuid
 from flite.users import models
 from django.db.models import F
 import time
+from rest_framework.pagination import LimitOffsetPagination
 
 # constants
 CREDIT='CREDIT'
@@ -153,3 +154,8 @@ def p2p_transfer(sender, recipient, amount):
 
 
     return True, 'Transfer successful'
+
+
+class CustomPagination(LimitOffsetPagination):
+    default_limit = 10
+    max_limit = 100

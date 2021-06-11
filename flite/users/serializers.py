@@ -1,5 +1,5 @@
-from rest_framework import serializers
-from .models import User, NewUserPhoneVerification,UserProfile,Referral
+from rest_framework import fields, serializers
+from .models import Transaction, User, NewUserPhoneVerification,UserProfile,Referral
 from . import utils
 from rest_framework.exceptions import ValidationError 
 
@@ -50,7 +50,6 @@ class CreateUserSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
 
-
 class SendNewPhonenumberSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
@@ -85,7 +84,9 @@ class AmountSerializer(serializers.Serializer):
             return amount
   
 class TransactionSerializer(serializers.ModelSerializer):
-    pass
+    class Meta:
+        model = Transaction
+        fields = '__all__'
 
 
 

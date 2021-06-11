@@ -1,9 +1,10 @@
 from rest_framework import viewsets, mixins, status
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from .models import User, NewUserPhoneVerification, Balance, Transaction
 from .permissions import IsUserOrReadOnly
-from .serializers import CreateUserSerializer, UserSerializer, SendNewPhonenumberSerializer, AmountSerializer
+from .serializers import CreateUserSerializer, TransactionSerializer, UserSerializer, SendNewPhonenumberSerializer, AmountSerializer
 from rest_framework.views import APIView
 from rest_framework.generics import GenericAPIView
 from rest_framework.decorators import action
@@ -139,7 +140,7 @@ class P2PTransferView(GenericAPIView):
             recipient = Balance.objects.get(id=self.kwargs['recipient_account_id'])
         except User.DoesNotExist:
             raise ValidationError('Invalid Reciepient')
-        print(sender.id)
+        
         return sender, recipient
 
 
@@ -159,3 +160,41 @@ class P2PTransferView(GenericAPIView):
             
         return Response(data= {"message": amount_serializer.errors['amount'][0]}, status=status.HTTP_400_BAD_REQUEST)
 
+
+from rest_framework.pagination import PageNumberPagination
+class TransactionViewSet(
+    # mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet):
+
+    "Get Transactions on an account"
+    
+    queryset = None
+    serializer_class = TransactionSerializer
+    pagination_class = utils.CustomPagination
+    permission_classes = (IsUserOrReadOnly,)
+    
+
+    def get_object(self, request):
+        try:
+            account = Balance.objects.get(id=self.kwargs['pk'])
+            self.queryset = Transaction.objects.filter(owner=account.owner)
+            return self.queryset
+        except Balance.DoesNotExist:
+            raise ValidationError('Invalid Account')
+
+
+    @action(detail=True, methods=['get'])
+    def transactions(self, request, *args, **kwargs):
+        
+        transactions = self.get_object(request)
+        serializer = self.serializer_class(transactions, many=True)
+        results = serializer.data
+        return Response(data = {
+                    "results": results,
+                    "message": "success"
+                    }
+                
+            , status=status.HTTP_200_OK)
+
+        
