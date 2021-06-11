@@ -188,10 +188,10 @@ class TestTransactions(APITestCase):
         eq_(len(response.json()['results']), 0)
 
     def test_user_can_fetch_a_single_transaction(self):
-        # /account/:account_id/transactions/:transaction_id
+       
         user = self.user
         recipient_user= UserFactory()
-        account = Balance.objects.get(owner=user)
+      
         # do transaction p2p transaction
         
         # fund account
@@ -200,20 +200,22 @@ class TestTransactions(APITestCase):
         self.client.post(deposit_url, deposit_payload)
 
         # account status before transfer
-        sender = Balance.objects.get(owner=self.user)
-        recipient = Balance.objects.get(owner=recipient_user)
+        sender_account= Balance.objects.get(owner=self.user)
+        recipient_account = Balance.objects.get(owner=recipient_user)
 
-        p2p_url = reverse('p2p_transfer', kwargs={'sender_account_id': sender.pk, 'recipient_account_id': recipient.pk})
+        p2p_url = reverse('p2p_transfer', kwargs={'sender_account_id': sender_account.pk, 'recipient_account_id': recipient_account.pk})
         p2p_payload = {
             "amount" : 500.00
         }
         self.client.post(p2p_url, p2p_payload)
 
-        transaction = Transaction.objects.get(owner=user)
 
-        url = reverse('account_transaction', kwargs={'account_id': account.pk, 'transaction_id': transaction.pk})
+        transaction = Transaction.objects.get(owner=recipient_user)
 
-        response = self.get.client(url)
+        url = reverse('account_transaction', kwargs={'account_id': recipient_account.pk, 'transaction_id': transaction.reference})
+
+        response = self.client.get(url)
         
         eq_(response.status_code, status.HTTP_200_OK)
+        eq_(response.json()['message'], 'success')
 

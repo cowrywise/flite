@@ -1,4 +1,5 @@
 from rest_framework import viewsets, mixins, status
+from rest_framework import views
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
@@ -6,7 +7,7 @@ from .models import User, NewUserPhoneVerification, Balance, Transaction
 from .permissions import IsUserOrReadOnly
 from .serializers import CreateUserSerializer, TransactionSerializer, UserSerializer, SendNewPhonenumberSerializer, AmountSerializer
 from rest_framework.views import APIView
-from rest_framework.generics import GenericAPIView
+from rest_framework.generics import GenericAPIView, RetrieveAPIView
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from . import utils
@@ -66,7 +67,7 @@ class UserViewSet(
             if user:
                 amount = account_serializer.validated_data.get('amount')
                 balance_before_withrawal = utils.check_balance(user) 
-                if balance_before_withrawal < amount or balance_before_withrawal == 0:
+                if balance_before_withrawal < amount or balance_before_withrawal <= 0 :
                     return Response(data={"message": "Insufficient funds"}, status=status.HTTP_403_FORBIDDEN) 
                 
                 b = Balance.objects.filter(owner=user)
@@ -161,15 +162,14 @@ class P2PTransferView(GenericAPIView):
         return Response(data= {"message": amount_serializer.errors['amount'][0]}, status=status.HTTP_400_BAD_REQUEST)
 
 
-from rest_framework.pagination import PageNumberPagination
 class TransactionViewSet(
     # mixins.ListModelMixin,
-    mixins.RetrieveModelMixin,
-    viewsets.GenericViewSet):
+    # viewsets.GenericViewSet
+    viewsets.ViewSet
+    ):
 
     "Get Transactions on an account"
     
-    queryset = None
     serializer_class = TransactionSerializer
     pagination_class = utils.CustomPagination
     permission_classes = (IsUserOrReadOnly,)
@@ -198,3 +198,23 @@ class TransactionViewSet(
             , status=status.HTTP_200_OK)
 
         
+
+class GetTransactionView(RetrieveAPIView):
+
+    permission_classes = (IsUserOrReadOnly,)
+
+    def get_object(self, request):
+        try:
+            account = Balance.objects.get(id=self.kwargs['account_id'])
+            transaction = Transaction.objects.get(owner=account.owner, reference=self.kwargs['transaction_id'])
+        except Balance.DoesNotExist:
+            raise ValidationError('Invalid Account')
+        return transaction
+
+
+    def get(self, request, *args, **kwargs):
+        transaction = self.get_object(request)
+        serializer = TransactionSerializer(transaction)
+        return Response(data = {
+            "result": serializer.data,
+            "message": "success" }, status=status.HTTP_200_OK)
