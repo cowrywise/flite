@@ -1,3 +1,4 @@
+from flite.users.utils import p2p_transfer
 from os import stat
 from django.urls import reverse
 from django.forms.models import model_to_dict
@@ -187,5 +188,32 @@ class TestTransactions(APITestCase):
         eq_(len(response.json()['results']), 0)
 
     def test_user_can_fetch_a_single_transaction(self):
-        assert False
+        # /account/:account_id/transactions/:transaction_id
+        user = self.user
+        recipient_user= UserFactory()
+        account = Balance.objects.get(owner=user)
+        # do transaction p2p transaction
+        
+        # fund account
+        deposit_url = reverse('users-deposits', kwargs={'pk': user.pk})
+        deposit_payload = {'amount': 600}
+        self.client.post(deposit_url, deposit_payload)
+
+        # account status before transfer
+        sender = Balance.objects.get(owner=self.user)
+        recipient = Balance.objects.get(owner=recipient_user)
+
+        p2p_url = reverse('p2p_transfer', kwargs={'sender_account_id': sender.pk, 'recipient_account_id': recipient.pk})
+        p2p_payload = {
+            "amount" : 500.00
+        }
+        self.client.post(p2p_url, p2p_payload)
+
+        transaction = Transaction.objects.get(owner=user)
+
+        url = reverse('account_transaction', kwargs={'account_id': account.pk, 'transaction_id': transaction.pk})
+
+        response = self.get.client(url)
+        
+        eq_(response.status_code, status.HTTP_200_OK)
 
