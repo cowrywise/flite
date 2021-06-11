@@ -149,7 +149,7 @@ def transfer(request, sender_account_id, recipient_account_id):
 
 class AccountTransactionListView(ListAPIView):
     """
-    Get all the list settlement account under the current tenant user
+    Get all the list of transaction
     Method `GET`<br>
     Format `Json` <br>
     Authorization: Token based auth is required
@@ -161,49 +161,26 @@ class AccountTransactionListView(ListAPIView):
         </pre>
     """
     serializer_class = UserTransactionListSerializer
-    # pagination_class = LargeResultsSetPagination
     permission_classes = (IsUserOrReadOnly,)
 
-    def get_queryset(self):
-        owner = self.owner
-        data = Transaction.objects.filter(owner=owner)
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            self.user_id = kwargs.pop('account_id')
+        except KeyError:
+            self.user_id = None
 
-        return data
+        try:
+            self.transaction_id = kwargs.pop('transaction_id')
+        except KeyError:
+            self.transaction_id = None
 
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-        serializer = self.get_serializer(queryset, many=True)
-        return Response({
-                "message": "User Transaction List",
-                "responseCode": "100",
-                'count': queryset.count(),
-                'next': None,
-                'previous': None,
-                "data": serializer.data
-            }, status=status.HTTP_200_OK)
+        return super().dispatch(request, *args, **kwargs)
 
-
-class AccountTransactionListView(ListAPIView):
-    """
-    Get all the list settlement account under the current tenant user
-    Method `GET`<br>
-    Format `Json` <br>
-    Authorization: Token based auth is required
-
-    Response:
-        <pre>
-
-
-        </pre>
-    """
-    serializer_class = UserTransactionListSerializer
-    # pagination_class = LargeResultsSetPagination
-    permission_classes = (IsUserOrReadOnly,)
 
     def get_queryset(self):
-        owner = self.owner
-        id = self.id
-        data = Transaction.objects.filter(owner=owner, id=id)
+        data = Transaction.objects.filter(owner__id=self.user_id)
+        if self.transaction_id:
+            data = data.filter(id=self.transaction_id)
 
         return data
 
