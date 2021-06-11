@@ -73,7 +73,7 @@ class DepositViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, viewsets.
         deposit_serializer = DepositSerializer(createdInstance)
         headers = self.get_success_headers(deposit_serializer.data)
         return Response(
-            deposit_serializer.data, status=status.HTTP_201_CREATED, headers=headers
+            deposit_serializer.data, status=status.HTTP_200_OK, headers=headers
         )
 
 class WithdrawalViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
@@ -93,7 +93,7 @@ class WithdrawalViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, viewse
         withdrawal_serializer = WithdrawalSerializer(createdInstance)
         headers = self.get_success_headers(withdrawal_serializer.data)
         return Response(
-            withdrawal_serializer.data, status=status.HTTP_201_CREATED, headers=headers
+            withdrawal_serializer.data, status=status.HTTP_200_OK, headers=headers
         )
 
 @api_view(['GET'])

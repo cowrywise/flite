@@ -244,7 +244,7 @@ Content-Type application/json
 
 ## P2P Transfer
 
-**Request**:
+**Request**: allows for transfer of money between users
 
 `POST` `/account/:sender_account_id/transfers/:recipient_account_id`
 
