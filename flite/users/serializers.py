@@ -76,3 +76,78 @@ class BalanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Balance
         fields = ('id', 'book_balance', 'available_balance')
+
+class DepositSerializer(serializers.ModelSerializer):
+    amount = serializers.FloatField()
+
+    def validate_amount(self, amount):
+        if amount <= 0.0:
+            raise serializers.ValidationError('Amount must be greater than zero!')
+        else:
+            return amount
+
+    def create(self, validated_data):
+        currentUser = self.context['request'].user
+        userBalance = Balance.objects.get(owner=currentUser)
+
+        userBalance.book_balance = F('book_balance') + validated_data.get('amount')
+        userBalance.available_balance = F('available_balance') + validated_data.get('amount')
+        userBalance.save()
+        userBalance.refresh_from_db()
+
+        userTransaction = Transaction(status='success', amount=validated_data.get(
+            'amount'), new_balance=userBalance.available_balance, owner=currentUser)
+        userTransaction.save()
+
+        return {
+            'status': 'success',
+            'message': 'amount deposited successfully',
+            'data': {
+                'first_name': currentUser.first_name,
+                'last_name': currentUser.last_name,
+                'available_balance': userBalance.available_balance
+            }
+        }
+
+class WithdrawalSerializer(serializers.ModelSerializer):
+    amount = serializers.FloatField()
+
+    def validate_amount(self, amount):
+        if amount <= 0.0:
+            raise serializers.ValidationError('Amount must be greater than zero!')
+
+        currentUser = self.context["request"].user
+        balance = Balance.objects.get(owner=currentUser)
+        if balance.available_balance < amount:
+            raise serializers.ValidationError("You do not have enough balance to perform this operation!")
+        else:
+            return amount
+
+    def create(self, validated_data):
+        currentUser = self.context['request'].user
+        userBalance = Balance.objects.get(owner=currentUser)
+
+        userBalance.book_balance = F('book_balance') - validated_data.get('amount')
+        userBalance.available_balance = F('available_balance') - validated_data.get('amount')
+        userBalance.save()
+        userBalance.refresh_from_db()
+
+        userTransaction = Transaction(status='success', amount=validated_data.get(
+            'amount'), new_balance=userBalance.available_balance, owner=currentUser)
+        userTransaction.save()
+
+        return {
+            'status': 'success',
+            'message': 'amount withdrawn successfully...no more insufficient funds😀',
+            'data': {
+                'first_name': currentUser.first_name,
+                'last_name': currentUser.last_name,
+                'available_balance': userBalance.available_balance
+            }
+        }
+
+class TransactionSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Transaction
+        fields = '__all__'
