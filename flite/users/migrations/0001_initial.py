@@ -49,5 +49,5 @@ class Migration(migrations.Migration):
             managers=[
                 ('objects', django.contrib.auth.models.UserManager()),
             ],
-        ),  # add migration here
+        ),
     ]

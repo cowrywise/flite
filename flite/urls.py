@@ -25,9 +25,9 @@ urlpatterns = [
     path('api/v1/account/<str:sender_account_id>/transfers/<str:receipient_account_id>',
          TransferViewSet.as_view({'post': 'create'}), name="transfer"),
     path('api/v1/account/<str:account_id>/transactions',
-         TransactionViewSet.as_view({'get': 'list'}), name="transaction-list"),
+         TransactionViewSet.as_view({'get': 'list'}), name="transactions"),
     path('api/v1/account/<str:account_id>/transactions/<str:pk>',
-         SingleTransactionViewSet, name="transaction-detail"),
+         SingleTransactionViewSet, name="single-transaction"),
 
     # the 'api-root' from django rest-frameworks default router
     # http://www.django-rest-framework.org/api-guide/routers/#defaultrouter
