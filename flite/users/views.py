@@ -13,9 +13,7 @@ from . import utils
 from .utils import deposit_transaction, withdraw_transaction, transfer_transaction
 
 
-class UserViewSet(mixins.RetrieveModelMixin,
-                  mixins.UpdateModelMixin,
-                  viewsets.GenericViewSet):
+class UserViewSet(ListAPIView):
     """
     Updates and retrieves user accounts
     """
@@ -62,17 +60,30 @@ class SendNewPhonenumberVerifyViewSet(mixins.CreateModelMixin,mixins.UpdateModel
         return Response(content, 200)
 
 
-@api_view(['GET'])
-def get_user_list(request, user_id):
-    user = User.objects.filter(id=user_id).first()
-    content = {
-        'data': UserSerializer(user).data
-    }
-    return Response(content, status=status.HTTP_200_OK)
+class UserList(ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsUserOrReadOnly, ]
+
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            self.user_id = kwargs.pop('user_id')
+        except KeyError:
+            self.user_id = None
+        return super().dispatch(request, *args, **kwargs)
+
+    def list(self, request):
+        if self.user_id:
+            queryset = self.queryset.filter(id=self.user_id)
+        else:
+            queryset = self.get_queryset()
+        serializer = UserSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
 def deposit_account(request, user_id):
+    #{"amount":  2000}
     data = request.data
     serializer = DepositSerializer(data=data)
     if serializer.is_valid():
@@ -82,9 +93,20 @@ def deposit_account(request, user_id):
             deposit_transaction(user, amount)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
-            return Response({"error": "User not found"}, status=status.HTTP_400_OK)
+            return Response({"error": "User not found"}, status=status.HTTP_400_BAD_REQUEST)
     else:
-        return Response({"error": serializer.errors}, status=status.HTTP_400_OK)
+        return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class DepositAccountView(APIView):
+    def dispatch(self, request, *args, **kwargs):
+        """Updates the keyword args to always have 'foo' with the value 'bar'"""
+        kwargs.update({'foo': 'bar'})  # inject the foo value
+        # now process dispatch as it otherwise normally would
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self):
+        pass
 
 
 @api_view(['POST'])
@@ -95,8 +117,10 @@ def withdraw_account(request, user_id):
         amount = serializer.validated_data.get('amount')
         user = User.objects.filter(id=user_id).first()
         if user:
-            withdraw_transaction(user, amount)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            if withdraw_transaction(user, amount):
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                return Response({"message": "insufficient fund "}, status=status.HTTP_200_OK)
         else:
             return Response({"error": "User not found"}, status=status.HTTP_400_OK)
     else:
@@ -104,17 +128,19 @@ def withdraw_account(request, user_id):
 
 
 @api_view(['POST'])
-def transfer(request, sender_id, recipient_id):
+def transfer(request, sender_account_id, recipient_account_id):
     data = request.data
     serializer = DepositSerializer(data=data)
     if serializer.is_valid():
         amount = serializer.validated_data.get('amount')
-        sender = User.objects.filter(id=sender_id).first()
-        receiver = User.objects.filter(id=recipient_id).first()
+        sender = User.objects.filter(id=sender_account_id).first()
+        receiver = User.objects.filter(id=recipient_account_id).first()
 
         if sender and receiver:
-            transfer_transaction(sender, receiver, amount)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            if transfer_transaction(sender, receiver, amount):
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                return Response({"message": "insufficient fund for sender "}, status=status.HTTP_200_OK)
         else:
             return Response({"error": "User not found"}, status=status.HTTP_400_OK)
     else:
@@ -135,7 +161,7 @@ class AccountTransactionListView(ListAPIView):
         </pre>
     """
     serializer_class = UserTransactionListSerializer
-    pagination_class = LargeResultsSetPagination
+    # pagination_class = LargeResultsSetPagination
     permission_classes = (IsUserOrReadOnly,)
 
     def get_queryset(self):
@@ -171,7 +197,7 @@ class AccountTransactionListView(ListAPIView):
         </pre>
     """
     serializer_class = UserTransactionListSerializer
-    pagination_class = LargeResultsSetPagination
+    # pagination_class = LargeResultsSetPagination
     permission_classes = (IsUserOrReadOnly,)
 
     def get_queryset(self):

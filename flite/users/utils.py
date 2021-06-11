@@ -1,11 +1,11 @@
 import uuid
-from random import random
+import random
 from string import digits
 
 from django.db.models import F
 
 from flite.users import models
-from flite.users.models import Balance, Transaction
+from flite.users.models import Balance, Transaction, P2PTransfer
 
 
 def generate_digits(length):
@@ -69,22 +69,24 @@ def validate_mobile_signup_sms(phone_number, code):
 
 
 def perform_credit_transaction(owner, amount, refrence):
-    balance = Balance.objects.get(owner=owner)
+    balance, _ = Balance.objects.get_or_create(owner=owner)
     balance.available_balance = F('available_balance') + amount
+    balance.save()
     balance.refresh_from_db()
 
     """ create a log """
-    transaction = Transaction.objects.create(owner=owner, reference=refrence, status="Approved",
+    Transaction.objects.create(owner=owner, reference=refrence, status="Approved",
                                              amount=amount, new_balance=balance.available_balance)
 
 
 def perform_debit_transaction(owner, amount, refrence):
     balance = Balance.objects.get(owner=owner)
     balance.available_balance = F('available_balance') - amount
+    balance.save()
     balance.refresh_from_db()
 
     """ create a log """
-    transaction = Transaction.objects.create(owner=owner, reference=refrence, status="Approved",
+    Transaction.objects.create(owner=owner, reference=refrence, status="Approved",
                                              amount=amount, new_balance=balance.available_balance)
 
 
@@ -93,9 +95,24 @@ def deposit_transaction(user, amount):
 
 
 def withdraw_transaction(user, amount):
-    perform_credit_transaction(user, amount, f"Withdraw made with ID: {generate_digits(10)}")
+    try:
+        balance = Balance.objects.get(owner=user).available_balance
+        if amount > balance:
+            return False
+        perform_debit_transaction(user, amount, f"Withdraw made with ID: {generate_digits(10)}")
+        return True
+    except Balance.DoesNotExist:
+        return False
 
 
 def transfer_transaction(sender, receiver, amount):
+    try:
+        balance = Balance.objects.get(owner=sender).available_balance
+        if amount > balance:
+            return False
+    except Balance.DoesNotExist:
+        return False
+
     perform_credit_transaction(receiver, amount, f"Transfer from user with ID:{sender.id} made with ID: {generate_digits(10)}")
     perform_debit_transaction(sender, amount, f"Transfer to user with ID:{receiver.id} made with ID: {generate_digits(10)}")
+    return True

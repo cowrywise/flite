@@ -71,6 +71,8 @@ class SendNewPhonenumberSerializer(serializers.ModelSerializer):
 class DepositSerializer(serializers.Serializer):
     amount = serializers.DecimalField(decimal_places=3, max_digits=20, )
 
+    # todo: validate amount > 0 and negative
+
 
 class UserTransactionListSerializer(serializers.ModelSerializer):
     class Meta:

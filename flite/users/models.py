@@ -25,6 +25,7 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
         UserProfile.objects.create(user=instance)
         Balance.objects.create(owner=instance)
 
+
 class Phonenumber(BaseModel):
     number = models.CharField(max_length=24)
     is_verified = models.BooleanField(default=False)
@@ -57,7 +58,6 @@ class UserProfile(BaseModel):
         return passcode
 
 
-
 class NewUserPhoneVerification(BaseModel):
 
     phone_number = PhoneNumberField(unique=True, blank=True, null=True)
@@ -70,7 +70,6 @@ class NewUserPhoneVerification(BaseModel):
 
     class Meta:
         verbose_name_plural = "New User Verification Codes"
-
 
 
 class Referral(BaseModel):
@@ -91,6 +90,7 @@ class Balance(BaseModel):
     class Meta:
         verbose_name= "Balance"
         verbose_name_plural = "Balances"
+
 
 class AllBanks(BaseModel):
 
@@ -123,7 +123,7 @@ class Transaction(BaseModel):
 
 
 class BankTransfer(Transaction):
-    bank = models.ForeignKey(Bank,on_delete=models.CASCADE)
+    bank = models.ForeignKey(Bank, on_delete=models.CASCADE)
 
     class Meta:
         verbose_name_plural = "Bank Transfers"
@@ -135,7 +135,6 @@ class P2PTransfer(Transaction):
 
     class Meta:
         verbose_name_plural = "P2P Transfers"
-
 
 
 class Card(models.Model):
@@ -163,6 +162,3 @@ class Card(models.Model):
         self.is_active = False
         self.is_deleted = True
         self.save()
-
-
-    
