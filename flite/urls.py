@@ -5,8 +5,8 @@ from django.contrib import admin
 from django.views.generic.base import RedirectView
 from rest_framework.routers import DefaultRouter
 from rest_framework.authtoken import views
-from .users.views import UserViewSet, UserCreateViewSet, SendNewPhonenumberVerifyViewSet
-from .users.views import (DepositViewSet, WithdrawalViewSet)
+from .users.views import (UserViewSet, UserCreateViewSet, SendNewPhonenumberVerifyViewSet,
+                          DepositViewSet, WithdrawalViewSet, all_transactions, transaction_detail)
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
@@ -26,10 +26,10 @@ urlpatterns = [
          WithdrawalViewSet.as_view({'post': 'create'}), name="withdrawal"),
     # path('api/v1/account/<str:sender_account_id>/transfers/<str:receipient_account_id>',
     #      TransferViewSet.as_view({'post': 'create'}), name="transfer"),
-    # path('api/v1/account/<str:account_id>/transactions',
-    #      TransactionViewSet.as_view({'get': 'list'}), name="transactions"),
-    # path('api/v1/account/<str:account_id>/transactions/<str:pk>',
-    #      SingleTransactionViewSet, name="single-transaction"),
+    path('api/v1/account/<str:account_id>/transactions',
+         all_transactions, name="transactions"),
+    path('api/v1/account/<str:account_id>/transactions/<str:pk>',
+         transaction_detail, name="single-transaction-detail"),
 
     # the 'api-root' from django rest-frameworks default router
     # http://www.django-rest-framework.org/api-guide/routers/#defaultrouter

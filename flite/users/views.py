@@ -7,6 +7,7 @@ from .serializers import *
 from rest_framework.views import APIView
 from . import utils
 from rest_framework import status
+from rest_framework.decorators import api_view
 
 class UserViewSet(mixins.RetrieveModelMixin,
                   mixins.UpdateModelMixin,
@@ -94,3 +95,34 @@ class WithdrawalViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, viewse
         return Response(
             withdrawal_serializer.data, status=status.HTTP_201_CREATED, headers=headers
         )
+
+@api_view(['GET'])
+def all_transactions(request, account_id):
+    possibleUserAccount = Bank.objects.get(id=account_id)
+    if not possibleUserAccount:
+        responseDetails = utils.error_response('account does not exist')
+        return Response(responseDetails, status=status.HTTP_404_NOT_FOUND)
+
+    if possibleUserAccount.owner != request.user:
+        responseDetails = utils.error_response('user not permitted to perform this operation')
+        return Response(responseDetails, status=status.HTTP_403_FORBIDDEN)
+
+    userTransactions = Transaction.objects.filter(owner=request.user)
+    finalResponseData = utils.success_response('user transactions retrieved successfully', userTransactions)
+    return Response(finalResponseData, status.HTTP_200_OK)
+
+@api_view(['GET'])
+def transaction_detail(request, account_id, transaction_id):
+    possibleUserAccount = Bank.objects.get(id=account_id)
+    if not possibleUserAccount:
+        responseDetails = utils.error_response('account does not exist')
+        return Response(responseDetails, status=status.HTTP_404_NOT_FOUND)
+
+    if possibleUserAccount.owner != request.user:
+        responseDetails = utils.error_response('user not permitted to perform this operation')
+        return Response(responseDetails, status=status.HTTP_403_FORBIDDEN)
+
+    singleUserTransaction = Transaction.objects.get(id=transaction_id)
+    finalResponseData = utils.success_response(
+        'user transaction retrieved successfully', singleUserTransaction)
+    return Response(finalResponseData, status.HTTP_200_OK)
