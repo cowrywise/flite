@@ -60,7 +60,6 @@ class Common(Configuration):
     # Postgres
     DATABASES = {
         'default': dj_database_url.config(
-            # default='postgres://postgres:postgres@postgres:5432/flite',
             default='postgres://postgres:uchenna@localhost:5432/flite',
             conn_max_age=int(os.getenv('POSTGRES_CONN_MAX_AGE', 600))
         )
