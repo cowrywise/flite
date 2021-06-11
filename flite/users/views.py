@@ -126,3 +126,7 @@ def transaction_detail(request, account_id, transaction_id):
     finalResponseData = utils.success_response(
         'user transaction retrieved successfully', singleUserTransaction)
     return Response(finalResponseData, status.HTTP_200_OK)
+
+# @api_view(['POST'])
+# def p2p_transfer(request, sender_account_id, recipient_account_id):
+

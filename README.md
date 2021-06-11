@@ -9,6 +9,16 @@ Flite is a simple wallet application that allows users to perform the following 
 - Transfer money between users
 - View transactions made for each user
 
+## Assumptions Made
+
+The following assumptions were made during the development of this project:
+
+- No bank charges applies for transfers, withdrawals or deposits.
+- For Deposits, the account is credited successfully once a POST request is made to its endpoint.
+- For Withdrawals, the account is debited successfully once a POST request is made to its endpoint.
+- No minimum withdrawal or deposit amount is set.
+- **book_balance** is the same with **available_balance**
+
 ## Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for development purposes.
@@ -37,16 +47,17 @@ vitrualenv venv
 ```
 
 - Activate the virtual environment using this command:
-  Mac:
+
+Mac:
 
 ```bash
-source env/bin/activate
+source venv/bin/activate
 ```
 
-Windows
+Windows:
 
 ```bash
-source env/Scripts/activate
+source venv/Scripts/activate
 ```
 
 - From your IDE, select the **python.exe** file contained in `venv/Scripts` (Windows) or `venv/bin` (Mac) folder. This will enable the installed packages to be used in thr application.
