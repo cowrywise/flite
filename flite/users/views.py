@@ -48,11 +48,42 @@ class UserViewSet(
                 )
                 
                 return Response(data={
-                    "message": "deposit successful"
+                    "message": "Deposit Successful"
                 })
             return Response(data={"message: user not found"}, status=status.HTTP_404_NOT_FOUND)
         return Response(data= {"message": serializer.errors['amount'][0]}, status=status.HTTP_400_BAD_REQUEST)
 
+
+    @action(detail=True, methods=['post'])
+    def withdrawals(self, request, pk=None):
+        user = self.get_object()
+        account_serializer = AmountSerializer(data=request.data)
+
+        if account_serializer.is_valid():
+            if user:
+                amount = account_serializer.validated_data.get('amount')
+                balance_before_withrawal = utils.check_balance(user) 
+                if balance_before_withrawal < amount or balance_before_withrawal == 0:
+                    return Response(data={"message": "Insufficient funds"}, status=status.HTTP_403_FORBIDDEN) 
+                
+                b = Balance.objects.filter(owner=user)
+                b.update(book_balance=F('book_balance') - amount)
+                b.update(available_balance=F('available_balance') - amount)
+                
+                new_balance = list(b)[0].available_balance
+                
+                utils.log_transaction(
+                    user=user,
+                    reference=utils.generate_transaction_refrence_code(),
+                    status=utils.COMPLETED,
+                    type=utils.DEBIT,
+                    amount=amount,
+                    new_balance=new_balance
+                )
+            return Response(data={
+                    "message": "Withdrawal Successful"
+                })
+        return Response(data= {"message": account_serializer.errors['amount'][0]}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserCreateViewSet(mixins.CreateModelMixin,
