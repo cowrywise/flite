@@ -9,8 +9,9 @@ https://documenter.getpostman.com/view/5673795/TzeRrB27
 docker-compose up
 
 The Following assumptions was made:
+
 **For Withdrawal:**
-     # TODO: Assumptions
+# TODO: Assumptions 
         # JWT Token Verification was successful 
         # Username in token matches draccount name
         # Device macthes any known device
