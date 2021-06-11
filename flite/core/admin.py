@@ -1,5 +1,5 @@
-from flite.users.models import Transaction
+from flite.users.models import Transaction, Balance
 from django.contrib import admin
 
-from flite.users.models import Transaction
 admin.site.register(Transaction)
+admin.site.register(Balance)
