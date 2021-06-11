@@ -111,7 +111,6 @@ class TestTransactions(APITestCase):
 
 
     def test_user_can_make_a_deposit(self):
-        self.client.force_authenticate(user=self.sender)
         sender_initial_balance = self.sender_balance.book_balance
         res = self.client.post(self.deposit_url, self.payload)
         eq_(res.status_code, status.HTTP_200_OK)
