@@ -6,6 +6,7 @@ https://documenter.getpostman.com/view/5673795/TzeRrB27
 ![image](https://user-images.githubusercontent.com/16105527/121635621-75719480-ca7e-11eb-8040-bf7876ae0483.png)
 
 **To start project, sipmly run:**
+
 docker-compose up
 
 The Following assumptions was made:
