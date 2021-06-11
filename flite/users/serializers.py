@@ -217,10 +217,3 @@ class TransactionSerializer(serializers.ModelSerializer):
     def get_owner(self, request):
         owner = request.owner.username
         return owner
-
-    def get(self, *args, **kwargs):
-        transaction = kwargs['transaction_id']
-        balance = kwargs['balance_id']
-        transactions = Transaction.objects.filter(balance=balance).values()
-        single_transaction = transactions.get(id=transaction)
-        return JsonResponse(data=single_transaction, safe=False)

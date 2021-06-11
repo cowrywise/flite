@@ -15,9 +15,9 @@ urlpatterns = [
          name='view_account_transaction'),
     path('api/v1/account/<str:balance_id>/transaction/', AllAccountTransactions.as_view(),
          name='all_accounts_transaction'),
-    path('api/v1/account/<str:sender_id>/transfer/<str:receiver_id>/', transfer_funds, name='transfer'),
+    path('api/v1/account/<str:sender_balance_id>/transfer/<str:receiver_balance_id>/', transfer_funds, name='transfer'),
     path('api/v1/banks/', BankList.as_view(), name='all_banks'),
-    path('api/v1/bank/', CreateBankAccountView.as_view(), name='all_bank'),
+    path('api/v1/bank/', CreateBankAccountView.as_view(), name='create_bank'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

@@ -35,6 +35,7 @@ class FundFactory(factory.django.DjangoModelFactory):
     receiver = factory.SubFactory(UserFactory)
     amount = faker.random_number()
     reference = get_random_string()
+    date_created = datetime.datetime.now()
     status = factory.fuzzy.FuzzyChoice(STATUS)
 
 
@@ -49,6 +50,7 @@ class TransferFactory(factory.django.DjangoModelFactory):
     receiver = factory.SubFactory(UserFactory)
     sender = factory.SubFactory(UserFactory)
     amount = faker.random_number()
+    date_created = datetime.datetime.now()
     reference = get_random_string()
     status = factory.fuzzy.FuzzyChoice(STATUS)
     transfer_type = factory.fuzzy.FuzzyChoice(TYPE)
@@ -61,6 +63,7 @@ class WithdrawFactory(factory.django.DjangoModelFactory):
 
     receiver = factory.SubFactory(UserFactory)
     amount = faker.random_number()
+    date_created = datetime.datetime.now()
     reference = get_random_string()
     status = factory.fuzzy.FuzzyChoice(STATUS)
 
@@ -86,6 +89,7 @@ class TransactionFactory(factory.django.DjangoModelFactory):
 
     owner = factory.SubFactory(UserFactory)
     balance = factory.SubFactory(BalanceFactory)
+    date_created = datetime.datetime.now()
     amount = faker.random_number()
     reference = get_random_string()
     status = factory.fuzzy.FuzzyChoice(STATUS)

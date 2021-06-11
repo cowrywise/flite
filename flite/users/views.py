@@ -162,18 +162,19 @@ def fund_account(request, user_id):
 @api_view(['POST', ])
 @permission_classes([IsAuthenticated])
 @authentication_classes([BasicAuthentication])
-def transfer_funds(request, sender_id, receiver_id):
+def transfer_funds(request, sender_balance_id, receiver_balance_id):
     if request.method == 'POST':
-        sender = User.objects.get(id=sender_id)
-        receiver = User.objects.get(id=receiver_id)
-        sender_account = Balance.objects.get(owner=sender.id)
-        receiver_account = Balance.objects.get(owner=receiver.id)
+        sender_account = Balance.objects.get(id=sender_balance_id)
+        receiver_account = Balance.objects.get(id=receiver_balance_id)
+        sender = User.objects.get(id=sender_account.owner.id)
+        receiver = User.objects.get(id=sender_account.owner.id)
         data = {'reference': get_random_string(),
                 'transfer_type': request.data['transfer_type'], 'amount': request.data['amount']}
         if float(request.data['amount']) > sender_account.available_balance:
             Transaction.objects.create(owner=sender, amount=float(request.data['amount']), reference=data['reference'],
                                        status='FAILED', transaction_type='Transfer(P2P)', balance=sender_account, )
-            return Response({'error': 'You cant transfer than your available balance'})
+            return Response({'error': 'You cant transfer than your available balance'},
+                            status=status.HTTP_406_NOT_ACCEPTABLE)
         serializer = TransferSerializer(data=data)
         if serializer.is_valid():
             serializer.save(sender=sender, status='SUCCESS', receiver=receiver)
@@ -206,7 +207,7 @@ def withdraw_funds(request, user_id):
         if float(request.data['amount']) > receiver_account.available_balance:
             Transaction.objects.create(owner=owner, amount=float(request.data['amount']), reference=data['reference'],
                                        status='FAILED', transaction_type='Withdraw', balance=receiver_account)
-            return Response({'error': 'Check amount entered'})
+            return Response({'error': 'Check amount entered'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         serializer = WithdrawFundsSerializer(data=data)
         if serializer.is_valid():
             serializer.save(receiver=owner, status='SUCCESS')

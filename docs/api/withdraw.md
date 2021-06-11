@@ -1,11 +1,11 @@
-# Fund
-Supports sending funds to account
+# Withdraw
+Supports withdraw of funds
 
-## Fund an account
+## Withdraw from account
 
 **Request**:
 
-`POST` `/users/:user_id/deposits`
+`POST` `api/v1/user/:user_id/withdrawals/`
 
 Parameters:
 
@@ -25,12 +25,25 @@ status      | string | No       | status of funding
 
 ```json
 Content-Type application/json
-201 Created
+200 OK
 
 {
-    "date_created": "2021-06-10T17:13:21+0100",
-    "reference": "CslHjCnn9UzM",
-    "amount": 54000.0,
-    "receiver": "welzatm"
+    "date_created": "2021-06-11T11:39:29+0100",
+    "reference": "He9D39j2NaPn",
+    "amount": 50000.0,
+    "receiver": "welzatm",
+    "status": "SUCCESS"
+}
+```
+
+**Withdrawal Error**:
+When the amount to be withdrawn is greater than account balance.
+
+```json
+Content-Type application/json
+406 NOT ACCEPTABLE
+
+{
+    "error": "Check amount entered"
 }
 ```
