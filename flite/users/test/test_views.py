@@ -138,9 +138,20 @@ class TestTransactions(APITestCase):
         eq_(balance_before.book_balance, balance_after.book_balance)
 
        
-
     def test_user_can_make_a_p2p_transfer(self):
-        assert False
+        recipient = UserFactory()
+        url = reverse('p2p_transfer', kwargs={'sender_account_id': self.user.pk, 'recipient_account_id': recipient.pk})
+        payload = {
+            "amount" : 500.00
+        }
+        response = self.client.post(url, payload)
+        response_message = response.json()['message']
+
+        eq_(response.status_code, status.HTTP_200_OK)
+        eq_(response_message, 'Transfer Successful')
+
+
+        # assert False
 
     def test_user_can_fetch_all_transactions(self):
         assert False
