@@ -1,4 +1,5 @@
 import uuid
+import secrets
 from flite.users import models
 
 def generate_new_user_passcode():
@@ -15,9 +16,9 @@ def generate_new_user_passcode():
 
 def send_mobile_signup_sms(phone_number, email):
 
-    status=False
+    status = False
     user_passcode = generate_new_user_passcode()
-    
+
     try:
         attempted_verification_obj = models.NewUserPhoneVerification.objects.get(phone_number=phone_number)
     except models.NewUserPhoneVerification.DoesNotExist:
@@ -30,8 +31,8 @@ def send_mobile_signup_sms(phone_number, email):
         attempted_verification_obj.save()
     else:
         attempted_verification_obj = models.NewUserPhoneVerification(phone_number=str(phone_number), verification_code=user_passcode,
-            is_verified=False, email=email)
-        attempted_verification_obj.save()    
+                                                                     is_verified=False, email=email)
+        attempted_verification_obj.save()
     #tasks.send_sms_verification_code.delay(phone_number, user_passcode)
     status = True
     return attempted_verification_obj, user_passcode
@@ -40,7 +41,8 @@ def send_mobile_signup_sms(phone_number, email):
 def validate_mobile_signup_sms(phone_number, code):
 
     try:
-        new_user_code_obj  = models.NewUserPhoneVerification.objects.get(phone_number=phone_number, verification_code=code)
+        new_user_code_obj = models.NewUserPhoneVerification.objects.get(
+            phone_number=phone_number, verification_code=code)
     except models.NewUserPhoneVerification.DoesNotExist:
         new_user_code_obj = None
 
@@ -52,3 +54,6 @@ def validate_mobile_signup_sms(phone_number, code):
             new_user_code_obj.save()
             return 1, "Code verified"
     return 0, "The code provided is invalid. Kindly check and try again."
+
+def generate_ref_code():
+    return secrets.token_hex(6)

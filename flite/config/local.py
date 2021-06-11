@@ -15,7 +15,7 @@ class Local(Common):
         '-s',
         '--nologcapture',
         '--with-coverage',
-        '--with-progressive',
+        # '--with-progressive',
         '--cover-package=flite'
     ]
 
