@@ -182,6 +182,9 @@ def p2p_transfer(request, sender_account_id, recipient_account_id):
         recipientTransaction = Transaction(status='success', amount=amount, new_balance=recipientBalance.available_balance, owner=possibleRecipientAccount.owner)
         recipientTransaction.save()
 
+        p2p_transfer_record = P2PTransfer(transaction_ptr=senderTransaction, sender=possibleSenderAccount.owner, receipient=possibleRecipientAccount.owner)
+        p2p_transfer_record.save()
+
         # return a response
         responseDetails = utils.success_response('transfer successful', senderBalance)
         return Response(responseDetails, status=status.HTTP_200_OK)
