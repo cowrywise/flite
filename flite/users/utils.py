@@ -57,3 +57,20 @@ def validate_mobile_signup_sms(phone_number, code):
 
 def generate_ref_code():
     return secrets.token_hex(6)
+
+def success_response(successMessage, responseData):
+    responseDetails = {
+        'status': 'error',
+        'message': successMessage,
+        'data': responseData
+    }
+    return responseDetails
+
+
+def error_response(errorMessage):
+    responseDetails = {
+        'status': 'error',
+        'message': errorMessage,
+        'data': None
+    }
+    return responseDetails

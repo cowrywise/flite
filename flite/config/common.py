@@ -45,6 +45,11 @@ class Common(Configuration):
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
     )
 
+    REST_FRAMEWORK = {
+        'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+        'PAGE_SIZE': 10
+    }
+
     ALLOWED_HOSTS = ["*"]
     ROOT_URLCONF = 'flite.urls'
     SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'myflitesecret')
