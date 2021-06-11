@@ -7,6 +7,7 @@ from rest_framework import status
 from faker import Faker
 from ..models import User,UserProfile,Referral,Balance, Transaction
 from .factories import UserFactory
+from django.db.models import F
 
 fake = Faker()
 
@@ -115,7 +116,7 @@ class TestTransactions(APITestCase):
         eq_(response.status_code, status.HTTP_200_OK)
         eq_(response.json()['message'], 'Withdrawal Successful')
         not eq_(balance_before.book_balance, balance_before.book_balance)
-        self.assertLess(balance_before.available_balance, balance_after.available_balance)
+        self.assertLess(balance_after.available_balance, balance_before.available_balance, )
 
     def test_user_with_insufficient_can_not_make_a_withdrawal(self):
         # deposit 
@@ -139,19 +140,41 @@ class TestTransactions(APITestCase):
 
        
     def test_user_can_make_a_p2p_transfer(self):
-        recipient = UserFactory()
-        url = reverse('p2p_transfer', kwargs={'sender_account_id': self.user.pk, 'recipient_account_id': recipient.pk})
+        recipient_user = UserFactory()
+
+        # fund account
+        deposit_url = reverse('users-deposits', kwargs={'pk': self.user.pk})
+        deposit_payload = {'amount': 600}
+        self.client.post(deposit_url, deposit_payload)
+        # account status before transfer
+        sender = Balance.objects.get(owner=self.user)
+        recipient = Balance.objects.get(owner=recipient_user)
+
+        url = reverse('p2p_transfer', kwargs={'sender_account_id': sender.pk, 'recipient_account_id': recipient.pk})
+        payload = {
+            "amount" : 500.00
+        }
+        # accounts status after transfer 
+        response = self.client.post(url, payload)
+        response_message = response.json()['message']
+
+        recipient_balance_after_transfer = Balance.objects.get(owner=recipient_user)
+        eq_(response.status_code, status.HTTP_200_OK)
+        eq_(response_message, 'Transfer successful')
+        eq_(recipient_balance_after_transfer.book_balance, 500.00)
+
+    def test_user_can_not_make_a_p2p_transfer_to_self(self):
+        # get user's account
+        b = Balance.objects.get(owner=self.user)
+        url = reverse('p2p_transfer', kwargs={'sender_account_id': b.pk, 'recipient_account_id': b.pk})
         payload = {
             "amount" : 500.00
         }
         response = self.client.post(url, payload)
-        response_message = response.json()['message']
-
-        eq_(response.status_code, status.HTTP_200_OK)
-        eq_(response_message, 'Transfer Successful')
+        eq_(response.status_code, status.HTTP_403_FORBIDDEN)
+        eq_(response.json()['message'], 'You can not transfer to the same account')
 
 
-        # assert False
 
     def test_user_can_fetch_all_transactions(self):
         assert False
