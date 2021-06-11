@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import User, NewUserPhoneVerification,UserProfile,Referral
 from . import utils
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError 
 
 class UserSerializer(serializers.ModelSerializer):
 
@@ -76,6 +76,7 @@ class AmountSerializer(serializers.Serializer):
     amount = serializers.DecimalField(max_digits=9999, decimal_places=2)
 
     def validate_amount(self, amount):
+        
         if amount < 100:
             raise ValidationError(
              "Amount must be at least N100"

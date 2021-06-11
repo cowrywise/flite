@@ -5,7 +5,9 @@ from .models import User, NewUserPhoneVerification, Balance, Transaction
 from .permissions import IsUserOrReadOnly
 from .serializers import CreateUserSerializer, UserSerializer, SendNewPhonenumberSerializer, AmountSerializer
 from rest_framework.views import APIView
+from rest_framework.generics import GenericAPIView
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from . import utils
 from flite.users import serializers
 from django.db.models import F
@@ -50,7 +52,7 @@ class UserViewSet(
                 return Response(data={
                     "message": "Deposit Successful"
                 })
-            return Response(data={"message: user not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(data={"message": "user not found"}, status=status.HTTP_404_NOT_FOUND)
         return Response(data= {"message": serializer.errors['amount'][0]}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -85,7 +87,6 @@ class UserViewSet(
                 })
         return Response(data= {"message": account_serializer.errors['amount'][0]}, status=status.HTTP_400_BAD_REQUEST)
 
-
 class UserCreateViewSet(mixins.CreateModelMixin,
                         viewsets.GenericViewSet):
     """
@@ -94,7 +95,6 @@ class UserCreateViewSet(mixins.CreateModelMixin,
     queryset = User.objects.all()
     serializer_class = CreateUserSerializer
     permission_classes = (AllowAny,)
-
 
 class SendNewPhonenumberVerifyViewSet(mixins.CreateModelMixin,mixins.UpdateModelMixin, viewsets.GenericViewSet):
     """
@@ -122,3 +122,40 @@ class SendNewPhonenumberVerifyViewSet(mixins.CreateModelMixin,mixins.UpdateModel
                 'message': msg,
         }
         return Response(content, 200)    
+
+
+class P2PTransferView(GenericAPIView):
+
+    permission_classes = (IsUserOrReadOnly,)
+    # serializer_class = UserSerializer
+
+    def get_objects(self, request):
+        try:
+            sender = Balance.objects.get(id=self.kwargs['sender_account_id'])
+        except User.DoesNotExist:
+            raise ValidationError('Invalid Sender')
+        
+        try:
+            recipient = Balance.objects.get(id=self.kwargs['recipient_account_id'])
+        except User.DoesNotExist:
+            raise ValidationError('Invalid Reciepient')
+        print(sender.id)
+        return sender, recipient
+
+
+    def post(self, request, *args, **kwargs):
+        try:
+            sender, recipient = self.get_objects(request)
+        except ValidationError as error:
+            return Response(data={"message": error.detail}, status=status.HTTP_400_BAD_REQUEST)
+
+        amount_serializer = AmountSerializer(data=request.data)
+        if amount_serializer.is_valid():
+            amount = amount_serializer.validated_data.get('amount')
+            p2p_transfer_status, p2p_transfer_message = utils.p2p_transfer(sender, recipient, amount)
+            if p2p_transfer_status:
+                return Response(data={"message": p2p_transfer_message}, status=status.HTTP_200_OK)
+            return Response(data={"message": p2p_transfer_message}, status=status.HTTP_403_FORBIDDEN)
+            
+        return Response(data= {"message": amount_serializer.errors['amount'][0]}, status=status.HTTP_400_BAD_REQUEST)
+

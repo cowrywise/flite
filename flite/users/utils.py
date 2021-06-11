@@ -1,5 +1,6 @@
 import uuid
 from flite.users import models
+from django.db.models import F
 import time
 
 # constants
@@ -95,3 +96,60 @@ def log_transaction(**kwargs):
 def check_balance(user):
     b = models.Balance.objects.get(owner=user)
     return b.available_balance
+
+
+def p2p_transfer(sender, recipient, amount):
+    """
+    Utility used in P2PTransferView
+    :sender  & :recipient are balance objects and not user's
+    :return (Boolean, Message)
+    """
+    sender_balance = sender.available_balance
+
+    # prevent transfers
+    if sender.id == recipient.id:
+        return False, 'You can not transfer to the same account'
+
+    if sender_balance < amount or sender_balance == 0:
+        return False, 'Insufficient funds'
+
+    # debit sender's account
+    sender.available_balance = F('available_balance') - amount
+    sender.book_balance = F('book_balance') - amount
+
+    # credit recipient's account 
+    recipient.available_balance = F('available_balance') + amount
+    recipient.book_balance = F('book_balance') + amount
+
+    # commit 
+    sender.save()
+    recipient.save()
+
+    # refresh
+    sender.refresh_from_db()
+    recipient.refresh_from_db()
+
+    # log transactions 
+
+    # sender (debit)
+    log_transaction(
+        user=sender.owner,
+        reference=generate_transaction_refrence_code(),
+        status=COMPLETED,
+        type=DEBIT,
+        amount=amount,
+        new_balance=sender.available_balance
+    )
+
+    # recipient (credit)
+    log_transaction(
+        user=recipient.owner,
+        reference=generate_transaction_refrence_code(),
+        status=COMPLETED,
+        type=CREDIT,
+        amount=amount,
+        new_balance=recipient.available_balance
+    )
+
+
+    return True, 'Transfer successful'
