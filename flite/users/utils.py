@@ -60,7 +60,7 @@ def generate_ref_code():
 
 def success_response(successMessage, responseData):
     responseDetails = {
-        'status': 'error',
+        'status': 'success',
         'message': successMessage,
         'data': responseData
     }
