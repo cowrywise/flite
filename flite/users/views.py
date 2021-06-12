@@ -129,82 +129,67 @@ def withdraw_money(request, user_id):
     return Response(responseDetails, status=status.HTTP_200_OK)
 
 
-@api_view(['GET'])
+@api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def transaction_detail(request, account_id, transaction_id):
-    accountOwner = User.objects.get(id=account_id)
-    if not accountOwner:
-        responseDetails = utils.error_response('user does not exist')
+def p2p_transfer(request, sender_account_id, recipient_account_id):
+    if not request.data.get('amount'):
+        responseDetails = utils.error_response('Amount field is required!')
         return Response(responseDetails, status=status.HTTP_400_BAD_REQUEST)
 
-    if accountOwner != request.user:
+    possibleSenderAccount = User.objects.get(id=sender_account_id)
+    possibleRecipientAccount = User.objects.get(id=recipient_account_id)
+
+    if not possibleSenderAccount:
+        responseDetails = utils.error_response('sender account does not exist')
+    if not possibleRecipientAccount:
+        responseDetails = utils.error_response('recipient account does not exist')
+
+    if possibleSenderAccount != request.user:
         responseDetails = utils.error_response('user not permitted to perform this operation')
         return Response(responseDetails, status=status.HTTP_403_FORBIDDEN)
 
-    singleUserTransaction = Transaction.objects.get(id=transaction_id)
-    finalResponseData = utils.success_response(
-        'user transaction retrieved successfully', singleUserTransaction)
-    return Response(finalResponseData, status.HTTP_200_OK)
+    amount = float(request.data.get('amount'))
+    if amount <= 0:
+        responseDetails = utils.error_response('Amount must be greater than zero!')
+        return Response(responseDetails, status=status.HTTP_400_BAD_REQUEST)
+
+    # debit the sender
+    senderBalance = Balance.objects.get(owner=possibleSenderAccount)
+    senderBalance.book_balance = F('book_balance') - amount
+    senderBalance.available_balance = F('available_balance') - amount
+    senderBalance.save()
+    senderBalance.refresh_from_db()
+
+    # credit the recipient
+    recipientBalance = Balance.objects.get(owner=possibleRecipientAccount)
+    recipientBalance.book_balance = F('book_balance') + amount
+    recipientBalance.available_balance = F('available_balance') + amount
+    recipientBalance.save()
+    recipientBalance.refresh_from_db()
+
+    # suggested enhancement: wrap all the transaction processes in a single database transaction
+    recipientTransaction = Transaction(
+        status='success', amount=amount, new_balance=recipientBalance.available_balance, owner=possibleRecipientAccount)
+    recipientTransaction.save()
+
+    p2p_transfer_record = P2PTransfer(
+        sender=possibleSenderAccount, receipient=possibleRecipientAccount, amount=amount, owner=possibleSenderAccount, status='success', new_balance=senderBalance.available_balance)
+    p2p_transfer_record.save()
+
+    # return a response
+    responseData = {
+        'first_name': possibleSenderAccount.first_name,
+        'last_name': possibleSenderAccount.last_name,
+        'available_balance': senderBalance.available_balance
+    }
+    responseDetails = utils.success_response('transfer successful', responseData)
+    return Response(responseDetails, status=status.HTTP_200_OK)
+
     # try:
 
     # except:
     #     responseDetails = utils.error_response('internal server error')
     #     return Response(responseDetails, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def p2p_transfer(request, sender_account_id, recipient_account_id):
-    try:
-        possibleSenderAccount = Bank.objects.get(id=sender_account_id)
-        possibleRecipientAccount = Bank.objects.get(id=recipient_account_id)
-
-        if not possibleSenderAccount:
-            responseDetails = utils.error_response('sender account does not exist')
-        if not possibleRecipientAccount:
-            responseDetails = utils.error_response('recipient account does not exist')
-
-        if possibleSenderAccount.owner != request.user:
-            responseDetails = utils.error_response('user not permitted to perform this operation')
-            return Response(responseDetails, status=status.HTTP_403_FORBIDDEN)
-
-        amount = request.data.amount
-        if amount <= 0.0:
-            raise serializers.ValidationError('Amount must be greater than zero!')
-
-        # debit the sender
-        senderBalance = Balance.objects.get(owner=possibleSenderAccount.owner)
-        senderBalance.book_balance = F('book_balance') - amount
-        senderBalance.available_balance = F('available_balance') - amount
-        senderBalance.save()
-        senderBalance.refresh_from_db()
-
-        senderTransaction = Transaction(
-            status='success', amount=amount, new_balance=senderBalance.available_balance, owner=possibleSenderAccount.owner)
-        senderTransaction.save()
-
-        # credit the recipient
-        recipientBalance = Balance.objects.get(owner=possibleRecipientAccount.owner)
-        recipientBalance.book_balance = F('book_balance') + amount
-        recipientBalance.available_balance = F('available_balance') + amount
-        recipientBalance.save()
-        recipientBalance.refresh_from_db()
-
-        recipientTransaction = Transaction(
-            status='success', amount=amount, new_balance=recipientBalance.available_balance, owner=possibleRecipientAccount.owner)
-        recipientTransaction.save()
-
-        p2p_transfer_record = P2PTransfer(
-            transaction_ptr=senderTransaction, sender=possibleSenderAccount.owner, receipient=possibleRecipientAccount.owner)
-        p2p_transfer_record.save()
-
-        # return a response
-        responseDetails = utils.success_response('transfer successful', senderBalance)
-        return Response(responseDetails, status=status.HTTP_200_OK)
-
-    except:
-        responseDetails = utils.error_response('internal server error')
-        return Response(responseDetails, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class TransactionListViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     serializer_class = TransactionSerializer

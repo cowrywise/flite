@@ -117,7 +117,7 @@ PayLoad:
 _Note:_
 
 - All parameters are required
-- Not Authorization Protected
+- **[Authorization Protected](authentication.md)**
 
 **Response**:
 
@@ -237,18 +237,18 @@ _Note:_
 Content-Type application/json
 200 OK
 {
-  "status": "success",
-  "message": "user transaction retrieved successfully",
-  "data": {
-    "id": "3ec50dc0-7d5a-9ee7-2b47-4f3c3543c213",
-    "created": "2021-06-11T13:45:22+0100",
-    "modified": "2021-06-11T13:45:22+0100",
-    "reference": "64c3d4a646ce",
     "status": "success",
-    "amount": 150.0,
-    "new_balance": 100.0223400000001,
-    "owner": "efb213fe-5c5e-3b10-399e-ccbede14d543"
-  }
+    "message": "user transaction retrieved successfully",
+    "data": {
+        "id": "c0c77812-f145-4f23-b07d-5e2fef848cbc",
+        "created": "2021-06-12T11:21:57+0100",
+        "modified": "2021-06-12T11:21:57+0100",
+        "reference": "a533409d478e",
+        "status": "success",
+        "amount": 200.0,
+        "new_balance": 16400.0,
+        "owner": "3d6ab92e-30ed-44b0-8673-8e5e156e174e"
+    }
 }
 ```
 
@@ -274,12 +274,12 @@ _Note:_
 Content-Type application/json
 200 OK
 {
-  "status": "success",
-  "message": "transfer successful",
-  "data": {
-    "id": "3ec50dc0-7d5a-9ee7-2b47-4f3c3543c213",
-    "book_balance": 100.0223400000001,
-    "available_balance": 100.0223400000001
-  }
+    "status": "success",
+    "message": "transfer successful",
+    "data": {
+        "first_name": "emeka",
+        "last_name": "olorondu",
+        "available_balance": 13800.0
+    }
 }
 ```

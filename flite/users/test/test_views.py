@@ -87,14 +87,8 @@ class TestTransactions(APITestCase):
         recipient = User.objects.create(username='john22', password=1234,
                                         email='john@gmail.com', first_name='john', last_name='smith')
 
-        testBank = AllBanks.objects.create(name='access bank', acronym='ABK', bank_code='901')
-        sender_account = Bank.objects.create(
-            account_name='sender account', account_number='123', account_type='savings', bank=testBank, owner=sender)
-        recipient_account = Bank.objects.create(
-            account_name='recipient account', account_number='123', account_type='savings', bank=testBank, owner=recipient)
-
-        sender_balance = Balance.objects.get(owner=sender)
-        recipient_balance = Balance.objects.get(owner=recipient)
+        # sender_balance = Balance.objects.get(owner=sender)
+        # recipient_balance = Balance.objects.get(owner=recipient)
 
         sender_transaction = Transaction.objects.create(
             owner=sender, amount=1000, status='success', new_balance=4000)
@@ -102,16 +96,14 @@ class TestTransactions(APITestCase):
         # assign to class fields
         self.sender = sender
         self.recipient = recipient
-        self.sender_balance = sender_balance
-        self.recipient_balance = recipient_balance
-        self.sender_account = sender_account
-        self.recipient_account = recipient_account
+        # self.sender_balance = sender_balance
+        # self.recipient_balance = recipient_balance
         self.sender_transaction = sender_transaction
-        self.test_bank = testBank
         self.payload = {'amount': 1000}
         self.withdrawalPayload = {'amount': 200}
 
         self.deposit_url = f"/api/v1/users/{sender.id}/deposits"
+        self.recipient_deposit_url = f"/api/v1/users/{recipient.id}/deposits"
         self.withdrawal_url = f"/api/v1/users/{sender.id}/withdrawals"
         self.p2p_transfer_url = f"/api/v1/account/{sender.id}/transfers/{recipient.id}"
         self.all_transactions_url = f"/api/v1/account/{sender.id}/transactions"
@@ -119,21 +111,23 @@ class TestTransactions(APITestCase):
 
     def test_user_can_make_a_deposit(self):
         self.client.force_authenticate(user=self.sender)
-        initial_balance = self.sender_balance.book_balance
         res = self.client.post(self.deposit_url, self.payload)
         eq_(res.status_code, status.HTTP_200_OK)
 
     def test_user_can_make_a_withdrawal(self):
         self.client.force_authenticate(user=self.sender)
-        initial_balance = self.sender_balance.book_balance
         self.client.post(self.deposit_url, self.payload)
         res = self.client.post(self.withdrawal_url, self.withdrawalPayload)
         eq_(res.status_code, status.HTTP_200_OK)
 
-    # def test_user_can_make_a_p2p_transfer(self):
-    #     self.client.force_authenticate(user=self.sender)
-    #     res = self.client.post(self.p2p_transfer_url, self.payload)
-    #     eq_(res.status_code, status.HTTP_200_OK)
+    def test_user_can_make_a_p2p_transfer(self):
+        self.client.force_authenticate(user=self.sender)
+
+        self.client.post(self.deposit_url, self.payload)
+        self.client.post(self.recipient_deposit_url, self.payload)
+
+        res = self.client.post(self.p2p_transfer_url, self.payload)
+        eq_(res.status_code, status.HTTP_200_OK)
 
     def test_user_can_fetch_all_transactions(self):
         self.client.force_authenticate(user=self.sender)
@@ -150,4 +144,3 @@ class TestTransactions(APITestCase):
         self.sender.delete()
         self.recipient.delete()
         self.sender_transaction.delete()
-        self.test_bank.delete()
