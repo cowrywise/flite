@@ -113,9 +113,9 @@ class TestTransactions(APITestCase):
 
         self.deposit_url = f"/api/v1/users/{sender.id}/deposits"
         self.withdrawal_url = f"/api/v1/users/{sender.id}/withdrawals"
-        self.p2p_transfer_url = f"/api/v1/account/{sender_account.id}/transfers/{recipient_account.id}"
-        self.all_transactions_url = f"/api/v1/account/{sender_account.id}/transactions"
-        self.single_transaction_url = f"/api/v1/account/{sender_account.id}/transactions/{sender_transaction.id}"
+        self.p2p_transfer_url = f"/api/v1/account/{sender.id}/transfers/{recipient.id}"
+        self.all_transactions_url = f"/api/v1/account/{sender.id}/transactions"
+        self.single_transaction_url = f"/api/v1/account/{sender.id}/transactions/{sender_transaction.id}"
 
     def test_user_can_make_a_deposit(self):
         self.client.force_authenticate(user=self.sender)
@@ -135,11 +135,11 @@ class TestTransactions(APITestCase):
     #     res = self.client.post(self.p2p_transfer_url, self.payload)
     #     eq_(res.status_code, status.HTTP_200_OK)
 
-    # def test_user_can_fetch_all_transactions(self):
-    #     self.client.force_authenticate(user=self.sender)
-    #     self.client.post(self.deposit_url, self.payload)
-    #     res = self.client.get(self.all_transactions_url)
-    #     eq_(res.status_code, status.HTTP_200_OK)
+    def test_user_can_fetch_all_transactions(self):
+        self.client.force_authenticate(user=self.sender)
+        self.client.post(self.deposit_url, self.payload)
+        res = self.client.get(self.all_transactions_url)
+        eq_(res.status_code, status.HTTP_200_OK)
 
     # def test_user_can_fetch_a_single_transaction(self):
     #     self.client.force_authenticate(user=self.sender)

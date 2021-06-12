@@ -188,24 +188,34 @@ Content-Type application/json
     "message": "user transactions retrieved successfully",
     "data": [
         {
-            "id": "125f029c-13a2-3fe9-v5b3-1c2f36ec3903",
-            "created": "2021-06-11T13:35:10+0100",
-            "modified": "2021-06-11T13:35:10+0100",
-            "reference": "16ba43a85109e",
+            "id": "c0c77812-f145-4f23-b07d-5e2fef848cbc",
+            "created": "2021-06-12T11:21:57+0100",
+            "modified": "2021-06-12T11:21:57+0100",
+            "reference": "a533409d478e",
             "status": "success",
-            "amount": 70.0,
-            "new_balance": 30.0340000000378,
-            "owner": "efb213fe-5c5e-3b10-399e-ccbede14d543"
+            "amount": 200.0,
+            "new_balance": 16400.0,
+            "owner": "3d6ab92e-30ed-44b0-8673-8e5e156e174e"
         },
         {
-            "id": "3ec50dc0-7d5a-9ee7-2b47-4f3c3543c213",
-            "created": "2021-06-11T13:45:22+0100",
-            "modified": "2021-06-11T13:45:22+0100",
-            "reference": "64c3d4a646ce",
+            "id": "a8487248-a395-47d3-804d-2ea5d3c0a145",
+            "created": "2021-06-12T11:20:29+0100",
+            "modified": "2021-06-12T11:20:29+0100",
+            "reference": "2c9f093fb3ef",
             "status": "success",
-            "amount": 150.0,
-            "new_balance": 100.0223400000001,
-            "owner": "efb213fe-5c5e-3b10-399e-ccbede14d543"
+            "amount": 200.0,
+            "new_balance": 16600.0,
+            "owner": "3d6ab92e-30ed-44b0-8673-8e5e156e174e"
+        },
+        {
+            "id": "72f862c6-a1bc-4e4f-a5b0-903a9179fab9",
+            "created": "2021-06-12T11:14:06+0100",
+            "modified": "2021-06-12T11:14:06+0100",
+            "reference": "e15ad3c35373",
+            "status": "success",
+            "amount": 500.0,
+            "new_balance": 16800.0,
+            "owner": "3d6ab92e-30ed-44b0-8673-8e5e156e174e"
         }
     ]
 }

@@ -84,8 +84,5 @@ class TransactionSerializer(serializers.ModelSerializer):
         model = Transaction
         fields = '__all__'
 
-class Bank(serializers.ModelSerializer):
 
-    class Meta:
-        model = Bank
-        fields = '__all__'
+    
