@@ -141,11 +141,10 @@ class TestTransactions(APITestCase):
         res = self.client.get(self.all_transactions_url)
         eq_(res.status_code, status.HTTP_200_OK)
 
-    # def test_user_can_fetch_a_single_transaction(self):
-    #     self.client.force_authenticate(user=self.sender)
-    #     res = self.client.get(self.single_transaction_url)
-    #     print(res.data)
-    #     eq_(res.status_code, status.HTTP_200_OK)
+    def test_user_can_fetch_a_single_transaction(self):
+        self.client.force_authenticate(user=self.sender)
+        res = self.client.get(self.single_transaction_url)
+        eq_(res.status_code, status.HTTP_200_OK)
 
     def tearDown(self):
         self.sender.delete()

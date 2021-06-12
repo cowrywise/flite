@@ -132,12 +132,12 @@ def withdraw_money(request, user_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def transaction_detail(request, account_id, transaction_id):
-    possibleUserAccount = Bank.objects.get(id=account_id)
-    if not possibleUserAccount:
-        responseDetails = utils.error_response('account does not exist')
-        return Response(responseDetails, status=status.HTTP_404_NOT_FOUND)
+    accountOwner = User.objects.get(id=account_id)
+    if not accountOwner:
+        responseDetails = utils.error_response('user does not exist')
+        return Response(responseDetails, status=status.HTTP_400_BAD_REQUEST)
 
-    if possibleUserAccount.owner_id != request.user.id:
+    if accountOwner != request.user:
         responseDetails = utils.error_response('user not permitted to perform this operation')
         return Response(responseDetails, status=status.HTTP_403_FORBIDDEN)
 
@@ -227,6 +227,23 @@ class TransactionListViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             'user transactions retrieved successfully', serializer.data)
         return Response(finalResponseData, status.HTTP_200_OK)
 
-    # def get_queryset(self):
-    #     userTransactions = Transaction.objects.filter(owner=self.request.user)
-    #     return userTransactions
+class SingleTransactionViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    serializer_class = TransactionSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def retrieve(self, request, account_id, transaction_id):
+        queryset = Transaction.objects.get(id=transaction_id)
+        serializer = TransactionSerializer(queryset, many=False)
+
+        accountOwner = User.objects.get(id=account_id)
+        if not accountOwner:
+            responseDetails = utils.error_response('user does not exist')
+            return Response(responseDetails, status=status.HTTP_400_BAD_REQUEST)
+
+        if accountOwner != request.user:
+            responseDetails = utils.error_response('user not permitted to perform this operation')
+            return Response(responseDetails, status=status.HTTP_403_FORBIDDEN)
+
+        finalResponseData = utils.success_response(
+            'user transaction retrieved successfully', serializer.data)
+        return Response(finalResponseData, status.HTTP_200_OK)
