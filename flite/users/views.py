@@ -60,138 +60,176 @@ class SendNewPhonenumberVerifyViewSet(mixins.CreateModelMixin, mixins.UpdateMode
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def deposit_money(request, user_id):
-    if not request.data.get('amount'):
-        responseDetails = utils.error_response('Amount field is required!')
-        return Response(responseDetails, status=status.HTTP_400_BAD_REQUEST)
+    """
+    Deposit money for a user
+    """
 
-    amount = float(request.data.get('amount'))
+    try:
+        if not request.data.get('amount'):
+            responseDetails = utils.error_response('Amount field is required!')
+            return Response(responseDetails, status=status.HTTP_400_BAD_REQUEST)
 
-    if amount <= 0:
-        responseDetails = utils.error_response('Amount must be greater than zero!')
-        return Response(responseDetails, status=status.HTTP_400_BAD_REQUEST)
+        amount = float(request.data.get('amount'))
 
-    currentUser = User.objects.get(id=user_id)
-    userBalance = Balance.objects.get(owner=currentUser)
+        if amount <= 0:
+            responseDetails = utils.error_response('Amount must be greater than zero!')
+            return Response(responseDetails, status=status.HTTP_400_BAD_REQUEST)
 
-    userBalance.book_balance = F('book_balance') + amount
-    userBalance.available_balance = F('available_balance') + amount
-    userBalance.save()
-    userBalance.refresh_from_db()
+        try:
+            currentUser = User.objects.get(id=user_id)
+            userBalance = Balance.objects.get(owner=currentUser)
+        except:
+            responseDetails = utils.error_response('user does not exist')
+            return Response(responseDetails, status=status.HTTP_404_NOT_FOUND)
 
-    userTransaction = Transaction(status='success', amount=amount,
-                                  new_balance=userBalance.available_balance, owner=currentUser)
-    userTransaction.save()
+        userBalance.book_balance = F('book_balance') + amount
+        userBalance.available_balance = F('available_balance') + amount
+        userBalance.save()
+        userBalance.refresh_from_db()
 
-    responseData = {
-        'first_name': currentUser.first_name,
-        'last_name': currentUser.last_name,
-        'available_balance': userBalance.available_balance
-    }
-    responseDetails = utils.success_response('amount deposited successfully', responseData)
-    return Response(responseDetails, status=status.HTTP_200_OK)
+        userTransaction = Transaction(status='success', amount=amount,
+                                      new_balance=userBalance.available_balance, owner=currentUser)
+        userTransaction.save()
+
+        responseData = {
+            'first_name': currentUser.first_name,
+            'last_name': currentUser.last_name,
+            'available_balance': userBalance.available_balance
+        }
+        responseDetails = utils.success_response('amount deposited successfully', responseData)
+        return Response(responseDetails, status=status.HTTP_200_OK)
+
+    except:
+        responseDetails = utils.error_response('internal server error')
+        return Response(responseDetails, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def withdraw_money(request, user_id):
-    if not request.data.get('amount'):
-        responseDetails = utils.error_response('Amount field is required!')
-        return Response(responseDetails, status=status.HTTP_400_BAD_REQUEST)
+    """
+    Withdraw money from a user's account (the user has to be the owner of the account)
+    """
 
-    amount = float(request.data.get('amount'))
+    try:
+        if not request.data.get('amount'):
+            responseDetails = utils.error_response('Amount field is required!')
+            return Response(responseDetails, status=status.HTTP_400_BAD_REQUEST)
 
-    if amount <= 0.0:
-        responseDetails = utils.error_response('Amount must be greater than zero!')
-        return Response(responseDetails, status=status.HTTP_400_BAD_REQUEST)
+        amount = float(request.data.get('amount'))
 
-    currentUser = User.objects.get(id=user_id)
-    userBalance = Balance.objects.get(owner=currentUser)
+        if amount <= 0.0:
+            responseDetails = utils.error_response('Amount must be greater than zero!')
+            return Response(responseDetails, status=status.HTTP_400_BAD_REQUEST)
 
-    if userBalance.available_balance < amount:
-        responseDetails = utils.error_response('You do not have enough balance to perform this operation!')
-        return Response(responseDetails, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            currentUser = User.objects.get(id=user_id)
+            userBalance = Balance.objects.get(owner=currentUser)
+        except:
+            responseDetails = utils.error_response('user does not exist')
+            return Response(responseDetails, status=status.HTTP_404_NOT_FOUND)
 
-    userBalance.book_balance = F('book_balance') - amount
-    userBalance.available_balance = F('available_balance') - amount
-    userBalance.save()
-    userBalance.refresh_from_db()
+        if userBalance.available_balance < amount:
+            responseDetails = utils.error_response(
+                'You do not have enough balance to perform this operation!')
+            return Response(responseDetails, status=status.HTTP_400_BAD_REQUEST)
 
-    userTransaction = Transaction(status='success', amount=amount,
-                                  new_balance=userBalance.available_balance, owner=currentUser)
-    userTransaction.save()
+        userBalance.book_balance = F('book_balance') - amount
+        userBalance.available_balance = F('available_balance') - amount
+        userBalance.save()
+        userBalance.refresh_from_db()
 
-    responseData = {
-        'first_name': currentUser.first_name,
-        'last_name': currentUser.last_name,
-        'available_balance': userBalance.available_balance
-    }
-    responseDetails = utils.success_response(
-        'amount withdrawn successfully...no more insufficient funds😀', responseData)
-    return Response(responseDetails, status=status.HTTP_200_OK)
+        userTransaction = Transaction(status='success', amount=amount,
+                                      new_balance=userBalance.available_balance, owner=currentUser)
+        userTransaction.save()
+
+        responseData = {
+            'first_name': currentUser.first_name,
+            'last_name': currentUser.last_name,
+            'available_balance': userBalance.available_balance
+        }
+        responseDetails = utils.success_response(
+            'amount withdrawn successfully...no more insufficient funds😀', responseData)
+        return Response(responseDetails, status=status.HTTP_200_OK)
+
+    except:
+        responseDetails = utils.error_response('internal server error')
+        return Response(responseDetails, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def p2p_transfer(request, sender_account_id, recipient_account_id):
-    if not request.data.get('amount'):
-        responseDetails = utils.error_response('Amount field is required!')
-        return Response(responseDetails, status=status.HTTP_400_BAD_REQUEST)
+    """
+    Transfer money from one user to another
+    """
 
-    possibleSenderAccount = User.objects.get(id=sender_account_id)
-    possibleRecipientAccount = User.objects.get(id=recipient_account_id)
+    try:
+        if not request.data.get('amount'):
+            responseDetails = utils.error_response('Amount field is required!')
+            return Response(responseDetails, status=status.HTTP_400_BAD_REQUEST)
 
-    if not possibleSenderAccount:
-        responseDetails = utils.error_response('sender account does not exist')
-    if not possibleRecipientAccount:
-        responseDetails = utils.error_response('recipient account does not exist')
+        try:
+            possibleSenderAccount = User.objects.get(id=sender_account_id)
+        except:
+            responseDetails = utils.error_response('sender account does not exist')
+            return Response(responseDetails, status=status.HTTP_404_NOT_FOUND)
 
-    if possibleSenderAccount != request.user:
-        responseDetails = utils.error_response('user not permitted to perform this operation')
-        return Response(responseDetails, status=status.HTTP_403_FORBIDDEN)
+        try:
+            possibleRecipientAccount = User.objects.get(id=recipient_account_id)
+        except:
+            responseDetails = utils.error_response('recipient account does not exist')
+            return Response(responseDetails, status=status.HTTP_404_NOT_FOUND)
 
-    amount = float(request.data.get('amount'))
-    if amount <= 0:
-        responseDetails = utils.error_response('Amount must be greater than zero!')
-        return Response(responseDetails, status=status.HTTP_400_BAD_REQUEST)
+        if possibleSenderAccount != request.user:
+            responseDetails = utils.error_response('user not permitted to perform this operation')
+            return Response(responseDetails, status=status.HTTP_403_FORBIDDEN)
 
-    # debit the sender
-    senderBalance = Balance.objects.get(owner=possibleSenderAccount)
-    senderBalance.book_balance = F('book_balance') - amount
-    senderBalance.available_balance = F('available_balance') - amount
-    senderBalance.save()
-    senderBalance.refresh_from_db()
+        amount = float(request.data.get('amount'))
+        if amount <= 0:
+            responseDetails = utils.error_response('Amount must be greater than zero!')
+            return Response(responseDetails, status=status.HTTP_400_BAD_REQUEST)
 
-    # credit the recipient
-    recipientBalance = Balance.objects.get(owner=possibleRecipientAccount)
-    recipientBalance.book_balance = F('book_balance') + amount
-    recipientBalance.available_balance = F('available_balance') + amount
-    recipientBalance.save()
-    recipientBalance.refresh_from_db()
+        # debit the sender
+        senderBalance = Balance.objects.get(owner=possibleSenderAccount)
+        senderBalance.book_balance = F('book_balance') - amount
+        senderBalance.available_balance = F('available_balance') - amount
+        senderBalance.save()
+        senderBalance.refresh_from_db()
 
-    # suggested enhancement: wrap all the transaction processes in a single database transaction
-    recipientTransaction = Transaction(
-        status='success', amount=amount, new_balance=recipientBalance.available_balance, owner=possibleRecipientAccount)
-    recipientTransaction.save()
+        # credit the recipient
+        recipientBalance = Balance.objects.get(owner=possibleRecipientAccount)
+        recipientBalance.book_balance = F('book_balance') + amount
+        recipientBalance.available_balance = F('available_balance') + amount
+        recipientBalance.save()
+        recipientBalance.refresh_from_db()
 
-    p2p_transfer_record = P2PTransfer(
-        sender=possibleSenderAccount, receipient=possibleRecipientAccount, amount=amount, owner=possibleSenderAccount, status='success', new_balance=senderBalance.available_balance)
-    p2p_transfer_record.save()
+        # suggested enhancement: wrap all the transaction processes in a single database transaction
+        recipientTransaction = Transaction(
+            status='success', amount=amount, new_balance=recipientBalance.available_balance, owner=possibleRecipientAccount)
+        recipientTransaction.save()
 
-    # return a response
-    responseData = {
-        'first_name': possibleSenderAccount.first_name,
-        'last_name': possibleSenderAccount.last_name,
-        'available_balance': senderBalance.available_balance
-    }
-    responseDetails = utils.success_response('transfer successful', responseData)
-    return Response(responseDetails, status=status.HTTP_200_OK)
+        p2p_transfer_record = P2PTransfer(
+            sender=possibleSenderAccount, receipient=possibleRecipientAccount, amount=amount, owner=possibleSenderAccount, status='success', new_balance=senderBalance.available_balance)
+        p2p_transfer_record.save()
 
-    # try:
+        # return a response
+        responseData = {
+            'first_name': possibleSenderAccount.first_name,
+            'last_name': possibleSenderAccount.last_name,
+            'available_balance': senderBalance.available_balance
+        }
+        responseDetails = utils.success_response('transfer successful', responseData)
+        return Response(responseDetails, status=status.HTTP_200_OK)
 
-    # except:
-    #     responseDetails = utils.error_response('internal server error')
-    #     return Response(responseDetails, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except:
+        responseDetails = utils.error_response('internal server error')
+        return Response(responseDetails, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class TransactionListViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    """
+    Get the list of all transactions made by a specific user
+    """
+
     serializer_class = TransactionSerializer
     permission_classes = (IsAuthenticated,)
 
@@ -199,10 +237,11 @@ class TransactionListViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         queryset = Transaction.objects.filter(owner=request.user).order_by('created').reverse()
         serializer = TransactionSerializer(queryset, many=True)
 
-        accountOwner = User.objects.get(id=account_id)
-        if not accountOwner:
+        try:
+            accountOwner = User.objects.get(id=account_id)
+        except:
             responseDetails = utils.error_response('user does not exist')
-            return Response(responseDetails, status=status.HTTP_400_BAD_REQUEST)
+            return Response(responseDetails, status=status.HTTP_404_NOT_FOUND)
 
         if accountOwner != request.user:
             responseDetails = utils.error_response('user not permitted to perform this operation')
@@ -213,6 +252,10 @@ class TransactionListViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         return Response(finalResponseData, status.HTTP_200_OK)
 
 class SingleTransactionViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    """
+    Get the details of a single transaction made by a user
+    """
+
     serializer_class = TransactionSerializer
     permission_classes = (IsAuthenticated,)
 
@@ -220,10 +263,11 @@ class SingleTransactionViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSe
         queryset = Transaction.objects.get(id=transaction_id)
         serializer = TransactionSerializer(queryset, many=False)
 
-        accountOwner = User.objects.get(id=account_id)
-        if not accountOwner:
+        try:
+            accountOwner = User.objects.get(id=account_id)
+        except:
             responseDetails = utils.error_response('user does not exist')
-            return Response(responseDetails, status=status.HTTP_400_BAD_REQUEST)
+            return Response(responseDetails, status=status.HTTP_404_NOT_FOUND)
 
         if accountOwner != request.user:
             responseDetails = utils.error_response('user not permitted to perform this operation')
