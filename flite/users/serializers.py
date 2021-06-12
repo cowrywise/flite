@@ -78,7 +78,7 @@ class BalanceSerializer(serializers.ModelSerializer):
         fields = ('id', 'book_balance', 'available_balance')
 
 
-class DepositSerializer(serializers.ModelSerializer):
+class DepositSerializer(serializers.Serializer):
     amount = serializers.FloatField()
 
     def validate_amount(self, amount):
@@ -110,7 +110,8 @@ class DepositSerializer(serializers.ModelSerializer):
             }
         }
 
-class WithdrawalSerializer(serializers.ModelSerializer):
+
+class WithdrawalSerializer(serializers.Serializer):
     amount = serializers.FloatField()
 
     def validate_amount(self, amount):
@@ -119,6 +120,7 @@ class WithdrawalSerializer(serializers.ModelSerializer):
 
         currentUser = self.context["request"].user
         balance = Balance.objects.get(owner=currentUser)
+        print(balance)
         if balance.available_balance < amount:
             raise serializers.ValidationError("You do not have enough balance to perform this operation!")
         else:
@@ -156,5 +158,5 @@ class TransactionSerializer(serializers.ModelSerializer):
 class Bank(serializers.ModelSerializer):
 
     class Meta:
-        model = Balance
-        fields = '__all__'        
+        model = Bank
+        fields = '__all__'

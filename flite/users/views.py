@@ -62,7 +62,7 @@ class DepositViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, viewsets.
     """
     queryset = Transaction.objects.all()
     serializer_class = DepositSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
     http_method_names = ['post']
 
     def create(self, request, *args, **kwargs):
@@ -78,7 +78,7 @@ class DepositViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, viewsets.
 
 class WithdrawalViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
     """
-    Deposit money to a user
+    Withdraw money from a user
     """
     queryset = Transaction.objects.all()
     serializer_class = WithdrawalSerializer
@@ -96,6 +96,36 @@ class WithdrawalViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, viewse
             withdrawal_serializer.data, status=status.HTTP_200_OK, headers=headers
         )
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def deposit_money(request, user_id):
+    amount = float(request.data.get('amount'))
+    print(amount)
+    if amount <= 0:
+        responseDetails = utils.error_response('Amount must be greater than zero!')
+        return Response(responseDetails, status=status.HTTP_400_BAD_REQUEST)
+
+    currentUser = User.objects.get(id=user_id)
+    userBalance = Balance.objects.get(owner=currentUser)
+
+    userBalance.book_balance = F('book_balance') + amount
+    userBalance.available_balance = F('available_balance') + amount
+    userBalance.save()
+    userBalance.refresh_from_db()
+
+    userTransaction = Transaction(status='success', amount=amount,
+                                  new_balance=userBalance.available_balance, owner=currentUser)
+    userTransaction.save()
+
+    responseData = {
+        'first_name': currentUser.first_name,
+        'last_name': currentUser.last_name,
+        'available_balance': userBalance.available_balance
+    }
+    responseDetails = utils.success_response('amount deposited successfully', responseData)
+    return Response(responseDetails, status=status.HTTP_200_OK)
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def all_transactions(request, account_id):
@@ -110,14 +140,15 @@ def all_transactions(request, account_id):
             return Response(responseDetails, status=status.HTTP_403_FORBIDDEN)
 
         userTransactions = Transaction.objects.filter(owner=request.user)
-        finalResponseData = utils.success_response('user transactions retrieved successfully', userTransactions)
+        finalResponseData = utils.success_response(
+            'user transactions retrieved successfully', userTransactions)
         return Response(finalResponseData, status.HTTP_200_OK)
 
     except:
         responseDetails = utils.error_response('internal server error')
         return Response(responseDetails, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def transaction_detail(request, account_id, transaction_id):
@@ -127,7 +158,7 @@ def transaction_detail(request, account_id, transaction_id):
             responseDetails = utils.error_response('account does not exist')
             return Response(responseDetails, status=status.HTTP_404_NOT_FOUND)
 
-        if possibleUserAccount.owner != request.user:
+        if possibleUserAccount.owner_id != request.user.id:
             responseDetails = utils.error_response('user not permitted to perform this operation')
             return Response(responseDetails, status=status.HTTP_403_FORBIDDEN)
 
@@ -139,7 +170,7 @@ def transaction_detail(request, account_id, transaction_id):
     except:
         responseDetails = utils.error_response('internal server error')
         return Response(responseDetails, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -155,7 +186,7 @@ def p2p_transfer(request, sender_account_id, recipient_account_id):
 
         if possibleSenderAccount.owner != request.user:
             responseDetails = utils.error_response('user not permitted to perform this operation')
-            return Response(responseDetails, status=status.HTTP_403_FORBIDDEN)    
+            return Response(responseDetails, status=status.HTTP_403_FORBIDDEN)
 
         amount = request.data.amount
         if amount <= 0.0:
@@ -168,9 +199,9 @@ def p2p_transfer(request, sender_account_id, recipient_account_id):
         senderBalance.save()
         senderBalance.refresh_from_db()
 
-        senderTransaction = Transaction(status='success', amount=amount, new_balance=senderBalance.available_balance, owner=possibleSenderAccount.owner)
+        senderTransaction = Transaction(
+            status='success', amount=amount, new_balance=senderBalance.available_balance, owner=possibleSenderAccount.owner)
         senderTransaction.save()
-
 
         # credit the recipient
         recipientBalance = Balance.objects.get(owner=possibleRecipientAccount.owner)
@@ -179,10 +210,12 @@ def p2p_transfer(request, sender_account_id, recipient_account_id):
         recipientBalance.save()
         recipientBalance.refresh_from_db()
 
-        recipientTransaction = Transaction(status='success', amount=amount, new_balance=recipientBalance.available_balance, owner=possibleRecipientAccount.owner)
+        recipientTransaction = Transaction(
+            status='success', amount=amount, new_balance=recipientBalance.available_balance, owner=possibleRecipientAccount.owner)
         recipientTransaction.save()
 
-        p2p_transfer_record = P2PTransfer(transaction_ptr=senderTransaction, sender=possibleSenderAccount.owner, receipient=possibleRecipientAccount.owner)
+        p2p_transfer_record = P2PTransfer(
+            transaction_ptr=senderTransaction, sender=possibleSenderAccount.owner, receipient=possibleRecipientAccount.owner)
         p2p_transfer_record.save()
 
         # return a response
@@ -191,8 +224,4 @@ def p2p_transfer(request, sender_account_id, recipient_account_id):
 
     except:
         responseDetails = utils.error_response('internal server error')
-        return Response(responseDetails, status=status.HTTP_500_INTERNAL_SERVER_ERROR)    
-
-
-
-
+        return Response(responseDetails, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
