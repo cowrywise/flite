@@ -125,13 +125,13 @@ _Note:_
 Content-Type application/json
 200 OK
 {
-  "status": "success",
-  "message": "amount deposited successfully",
-  "data": {
-    "first_name": "john",
-    "last_name": "smith",
-    "available_balance": 50.0320000000193
-  }
+    "status": "success",
+    "message": "amount deposited successfully",
+    "data": {
+        "first_name": "emeka",
+        "last_name": "olorondu",
+        "available_balance": 16800.0
+    }
 }
 ```
 
@@ -158,13 +158,13 @@ _Note:_
 Content-Type application/json
 200 OK
 {
-  "status": "success",
-  "message": "amount withdrawn successfully...no more insufficient funds😀",
-  "data": {
-    "first_name": "john",
-    "last_name": "smith",
-    "available_balance": 20.0320000000193
-  }
+    "status": "success",
+    "message": "amount withdrawn successfully...no more insufficient funds😀",
+    "data": {
+        "first_name": "emeka",
+        "last_name": "olorondu",
+        "available_balance": 16400.0
+    }
 }
 ```
 

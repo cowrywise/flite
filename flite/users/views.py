@@ -56,51 +56,16 @@ class SendNewPhonenumberVerifyViewSet(mixins.CreateModelMixin, mixins.UpdateMode
         }
         return Response(content, 200)
 
-class DepositViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
-    """
-    Deposit money to a user
-    """
-    queryset = Transaction.objects.all()
-    serializer_class = DepositSerializer
-    permission_classes = (IsAuthenticated,)
-    http_method_names = ['post']
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        createdInstance = serializer.save()
-        deposit_serializer = DepositSerializer(createdInstance)
-        headers = self.get_success_headers(deposit_serializer.data)
-        return Response(
-            deposit_serializer.data, status=status.HTTP_200_OK, headers=headers
-        )
-
-class WithdrawalViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
-    """
-    Withdraw money from a user
-    """
-    queryset = Transaction.objects.all()
-    serializer_class = WithdrawalSerializer
-    permission_classes = (IsAuthenticated,)
-    http_method_names = ['post']
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        createdInstance = serializer.save()
-        withdrawal_serializer = WithdrawalSerializer(createdInstance)
-        headers = self.get_success_headers(withdrawal_serializer.data)
-        return Response(
-            withdrawal_serializer.data, status=status.HTTP_200_OK, headers=headers
-        )
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def deposit_money(request, user_id):
+    if not request.data.get('amount'):
+        responseDetails = utils.error_response('Amount field is required!')
+        return Response(responseDetails, status=status.HTTP_400_BAD_REQUEST)
+
     amount = float(request.data.get('amount'))
-    print(amount)
+
     if amount <= 0:
         responseDetails = utils.error_response('Amount must be greater than zero!')
         return Response(responseDetails, status=status.HTTP_400_BAD_REQUEST)
@@ -125,6 +90,43 @@ def deposit_money(request, user_id):
     responseDetails = utils.success_response('amount deposited successfully', responseData)
     return Response(responseDetails, status=status.HTTP_200_OK)
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def withdraw_money(request, user_id):
+    if not request.data.get('amount'):
+        responseDetails = utils.error_response('Amount field is required!')
+        return Response(responseDetails, status=status.HTTP_400_BAD_REQUEST)
+
+    amount = float(request.data.get('amount'))
+
+    if amount <= 0.0:
+        responseDetails = utils.error_response('Amount must be greater than zero!')
+        return Response(responseDetails, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    currentUser = User.objects.get(id=user_id)
+    userBalance = Balance.objects.get(owner=currentUser)
+
+    if userBalance.available_balance < amount:
+        responseDetails = utils.error_response('You do not have enough balance to perform this operation!')
+        return Response(responseDetails, status=status.HTTP_401_UNAUTHORIZED)
+
+    userBalance.book_balance = F('book_balance') - amount
+    userBalance.available_balance = F('available_balance') - amount
+    userBalance.save()
+    userBalance.refresh_from_db()
+
+    userTransaction = Transaction(status='success', amount=amount,
+                                  new_balance=userBalance.available_balance, owner=currentUser)
+    userTransaction.save()
+
+    responseData = {
+        'first_name': currentUser.first_name,
+        'last_name': currentUser.last_name,
+        'available_balance': userBalance.available_balance
+    }
+    responseDetails = utils.success_response(
+        'amount withdrawn successfully...no more insufficient funds😀', responseData)
+    return Response(responseDetails, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
