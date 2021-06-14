@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.db.models import base
 from django.urls import path, re_path, include, reverse_lazy
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -9,7 +10,7 @@ from .users.views import (UserViewSet, UserCreateViewSet, SendNewPhonenumberVeri
                           TransactionListViewSet, TransactionDetailsViewSet)
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='users')
-router.register(r'users', UserCreateViewSet)
+router.register(r'signups', UserCreateViewSet, basename='signups')
 router.register(r'phone', SendNewPhonenumberVerifyViewSet)
 
 

@@ -5,7 +5,7 @@ from nose.tools import ok_, eq_
 from rest_framework.test import APITestCase
 from rest_framework import status
 from faker import Faker
-from ..models import User, UserProfile, Referral, Balance
+from ..models import Transaction, User, UserProfile, Referral, Balance
 from .factories import UserFactory
 
 fake = Faker()
@@ -17,7 +17,7 @@ class TestUserListTestCase(APITestCase):
     """
 
     def setUp(self):
-        self.url = reverse('user-list')
+        self.url = reverse('signups-list')
         self.user_data = model_to_dict(UserFactory.build())
 
     def test_post_request_with_no_data_fails(self):
@@ -61,7 +61,7 @@ class TestUserDetailTestCase(APITestCase):
 
     def setUp(self):
         self.user = UserFactory()
-        self.url = reverse('user-detail', kwargs={'pk': self.user.pk})
+        self.url = reverse('users-detail', kwargs={'pk': self.user.pk})
         self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.user.auth_token}')
 
     def test_get_request_returns_a_given_user(self):
@@ -91,7 +91,7 @@ class TestTransactions(APITestCase):
         url = reverse('users-deposits', kwargs={'pk': self.user.pk})
         payload = {'amount': 1000.00, 'reference': 'Saving for christmas'}
         response = self.client.post(url, payload)
-        eq_(response.status_code, status.HTTP_201_CREATED)
+        eq_(response.status_code, status.HTTP_200_OK)
         # checking if balance has changed
         balance = Balance.objects.get(owner=self.user)
         eq_(balance.available_balance, 1000.00)
@@ -140,13 +140,15 @@ class TestTransactions(APITestCase):
         eq_(sender_balance.book_balance, (deposit_amount-transfer_amount))
 
     def test_user_can_fetch_all_transactions(self):
-        self.url = reverse('transaction-list', kwargs={'account_id': self.sender.id})
+        self.url = reverse('transaction-list', kwargs={'account_id': self.user.pk})
         response = self.client.get(self.url)
         eq_(response.status_code, status.HTTP_200_OK)
 
-        eq_(type(response.json()), list)
+        eq_(type(response.json()), dict)
 
-        eq_(len(response.json()), 0)
+        eq_(len(response.json()), 4) # paginated results sends "count", "next", "previous", "results"
+        eq_(len(response.json()['results']), 0)
+        
 
         # perform deposit and withdrawal and check for transaction.
         deposit_amount = 1000.00
@@ -161,20 +163,22 @@ class TestTransactions(APITestCase):
 
         response = self.client.get(self.url)
         eq_(response.status_code, status.HTTP_200_OK)
-        eq_(type(response.json()), list)
-        eq_(len(response.json()), 2)
+        eq_(type(response.json()), dict)
+        eq_(len(response.json()), 4)
+        eq_(len(response.json()['results']), 2)
 
     def test_user_can_fetch_a_single_transaction(self):
         # make depoist
         deposit_amount = 1000.00
         deposit_url = reverse('users-deposits', kwargs={'pk': self.user.pk})
         deposit_payload = {'amount': deposit_amount, 'reference': 'Saving for christmas'}
-        response = self.client.post(deposit_url, deposit_payload)
-        transaction_id = response.json()['transaction_id']
+        self.client.post(deposit_url, deposit_payload)
+        
+        transaction = Transaction.objects.get(owner=self.user)
 
         # fetch transaction
         self.url = reverse('transaction-detail', kwargs={'account_id': self.user.pk,
-                                                         'transaction_id': transaction_id})
+                                                         'transaction_id': transaction.id})
         response = self.client.get(self.url)
         eq_(response.status_code, status.HTTP_200_OK)
         eq_(type(response.json()), dict)
