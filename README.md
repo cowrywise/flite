@@ -1,3 +1,1 @@
-# Flite
-
-#TODO: update readme for local development 
+Refer to Index.md
