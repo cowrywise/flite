@@ -107,7 +107,7 @@ class BankList(ListAPIView):
 
 class AllAccountTransactions(RetrieveAPIView):
     queryset = Transaction.objects.all()
-    serializer_class = TransferSerializer
+    serializer_class = TransactionSerializer
     authentication_classes = (BasicAuthentication,)
     permission_classes = ()
     pagination_class = PageNumberPagination
@@ -120,7 +120,7 @@ class AllAccountTransactions(RetrieveAPIView):
 
 class ViewAccountTransaction(RetrieveAPIView):
     queryset = Transaction.objects.all()
-    serializer_class = TransferSerializer
+    serializer_class = TransactionSerializer
     authentication_classes = (BasicAuthentication,)
     permission_classes = ()
     pagination_class = PageNumberPagination
