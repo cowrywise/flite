@@ -59,6 +59,8 @@ class UsersListView(APIView):
 
 class P2PTransferView(APIView):
 
+    permission_classes = (AllowAny,)
+
     def generate_transaction_reference(self):
         """
         Generate Transaction reference
@@ -81,8 +83,8 @@ class P2PTransferView(APIView):
         except ValueError:
             return Response({"error": "Invalid amount provided."}, status=status.HTTP_400_BAD_REQUEST)
 
-        receiver_balance = get_object_or_404(Balance, owner__id=recipient_account_id)
         sender_balance = get_object_or_404(Balance, owner__id=sender_account_id)
+        receiver_balance = get_object_or_404(Balance, owner__id=recipient_account_id)
 
         # Assume that the sender has sufficient balance
 
@@ -166,7 +168,7 @@ class UserDepositView(APIView):
     A view for updating deposits related to a specific user's balance.
     """
 
-    permission_classes = (IsAuthenticated,)  # Assuming you want only authenticated users to access this endpoint
+    permission_classes = (AllowAny,)  # Assuming you want only authenticated users to access this endpoint
 
     def generate_transaction_reference(self):
         """
@@ -221,7 +223,7 @@ class UserWithdrawalView(APIView):
     A view for updating deposits related to a specific user's balance.
     """
 
-    permission_classes = (IsAuthenticated,)  # Assuming you want only authenticated users to access this endpoint
+    permission_classes = (AllowAny,)  # Assuming you want only authenticated users to access this endpoint
 
     def generate_transaction_reference(self):
         """
