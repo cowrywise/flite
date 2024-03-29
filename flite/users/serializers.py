@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, NewUserPhoneVerification,UserProfile,Referral
+from .models import User, NewUserPhoneVerification,UserProfile,Referral, Balance, Transaction, P2PTransfer
 from . import utils
 
 class UserSerializer(serializers.ModelSerializer):
@@ -70,3 +70,24 @@ class SendNewPhonenumberSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'verification_code')
         
     
+class BalanceSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the Balance model.
+    """
+
+    class Meta:
+        model = Balance
+        fields = ('id', 'owner', 'book_balance', 'available_balance', 'active',)
+
+
+class TransactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transaction
+        fields = ('owner', 'reference', 'status', 'amount', 'new_balance',)
+
+class P2PTransactionSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = P2PTransfer
+        fields = ('owner', 'reference', 'status', 'amount', 'new_balance', 'recipient',)
+        read_only_fields = ('owner', 'new_balance', 'status', 'reference',)
