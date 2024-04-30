@@ -14,13 +14,19 @@ services:
       POSTGRES_USER: postgres
     ports:
       - "5432:5432"
-
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
   django:
     restart: always
     environment:
       - DJANGO_SECRET_KEY=local
     image: django
     container_name: django
+    platform: linux/arm64/v8
     build: ./
     command: >
       bash -c "python wait_for_postgres.py &&
@@ -32,3 +38,14 @@ services:
       - "8000:8000"
     depends_on:
       - postgres
+  celery-worker:
+    build: .
+    command: celery -A flite worker -l info  # Replace "myproject" with your project name
+    environment:
+      - DJANGO_SETTINGS_MODULE=flite.config  # Replace "myproject" with your project name
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672/  # RabbitMQ connection details
+    volumes:
+      - ./:/code
+    depends_on:
+      - django
+      - rabbitmq

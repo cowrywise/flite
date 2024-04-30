@@ -15,7 +15,10 @@ router.register(r'phone', SendNewPhonenumberVerifyViewSet)
 urlpatterns = [
     path('admin/', admin.site.urls),
     #   path('jet_api/', include('jet_django.urls')),
-    path('api/v1/', include(router.urls)),
+    path('api/v1/', include([
+        path('', include(router.urls)),  # Include URLs from your router
+        path('', include('flite.core.urls')),  # Include URLs from your app
+    ])),
     path('api-token-auth/', views.obtain_auth_token),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 
