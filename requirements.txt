@@ -1,15 +1,15 @@
 # Core
+six==1.16.0
 pytz==2018.9
-Django==2.1.9
-django-configurations==2.1
+Django==3.2.16
 gunicorn==19.9.0
 newrelic==4.12.0.113
-six
+django-configurations==2.2
 celery
 flower
 
 # For the persistence stores
-psycopg2-binary==2.7.7
+psycopg2-binary
 dj-database-url==0.5.0
 
 # Model Tools
@@ -17,13 +17,13 @@ django-model-utils==3.1.2
 django_unique_upload==0.2.1
 
 # Rest apis
-djangorestframework==3.9.1
+djangorestframework==3.11.0
 Markdown==3.0.1
-django-filter==2.1.0
+django-filter
 
 # Developer Tools
 ipdb==0.11
-ipython==7.2.0
+ipython
 mkdocs==1.0.4
 flake8==3.7.5
 
@@ -37,7 +37,7 @@ coverage==4.5.2
 # Static and Media Storage
 django-storages==1.7.1
 boto3==1.9.93
-django-extensions==2.2.1
+django-extensions==3.1.0
 django-environ==0.4.5
 phonenumbers
 django-phonenumber-field

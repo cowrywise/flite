@@ -25,11 +25,12 @@ class Common(Configuration):
         # Third party apps
         'rest_framework',            # utilities for rest apis
         'rest_framework.authtoken',  # token authentication
-        'django_filters',            # for filtering rest endpoints
-
+        'django_filters',  
+      
+    
         # Your apps
         'flite.users',
-        'flite.core',
+        'flite.core.apps.CoreConfig',
 
     )
 
@@ -85,7 +86,7 @@ class Common(Configuration):
         'django.contrib.staticfiles.finders.FileSystemFinder',
         'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     )
-
+    CELERY_BROKER_URL = 'amqp://guest:guest@rabbitmq:5672//'
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
     # Media files
     MEDIA_ROOT = join(os.path.dirname(BASE_DIR), 'media')
