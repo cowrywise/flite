@@ -1,5 +1,6 @@
 from django.test import TestCase
 from core.models import BudgetCategory, Transaction
+from django.contrib.auth.models import User
 
 class TestBudgetCategoryModel(TestCase):
     def test_str_representation(self):

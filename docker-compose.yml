@@ -40,7 +40,7 @@ services:
       - postgres
   celery-worker:
     build: .
-    command: celery -A flite worker -l info  # Replace "myproject" with your project name
+    command: celery -A flite worker -l info  # Specify the Celery application here
     environment:
       - DJANGO_SETTINGS_MODULE=flite.config  # Replace "myproject" with your project name
       - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672/  # RabbitMQ connection details
@@ -49,3 +49,25 @@ services:
     depends_on:
       - django
       - rabbitmq
+  mailpit:
+    image: axllent/mailpit
+    container_name: mailpit
+    restart: unless-stopped
+    volumes:
+      - ./data:/data
+    ports:
+      - 8025:8025
+      - 1025:1025
+    environment:
+      MP_MAX_MESSAGES: 5000
+      MP_DATABASE: /data/mailpit.db
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+  flower:
+    image: mher/flower
+    command: celery flower
+    environment:
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+    depends_on:
+      - rabbitmq
+    restart: always

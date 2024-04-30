@@ -2,7 +2,8 @@ import uuid
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import User
-# Create your models here.
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.conf import settings
 class BaseModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -30,4 +31,13 @@ class Transaction(models.Model):
     
     def __str__(self):
         return f"{self.category.name} - {self.amount}"
-    
+
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from .tasks import check_budget_threshold
+
+@receiver(post_save, sender=Transaction)
+def run_check_budget_threshold(sender, **kwargs):
+    print("Running check_budget_threshold task")
+    check_budget_threshold.delay()
