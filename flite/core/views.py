@@ -2,15 +2,19 @@ import logging
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response 
+from rest_framework.response import Response
 from .models import BudgetCategory, Transaction
 from .serializers import BudgetCategorySerializer, TransactionSerializer
 from rest_framework.permissions import AllowAny
+from utils import swagger_decorator
+
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 logger.addHandler(logging.StreamHandler())
 
 
+@swagger_decorator(methods=['GET'], responses={200: BudgetCategorySerializer(many=True)})
+@swagger_decorator(methods=['POST'], request_body=BudgetCategorySerializer, responses={201: BudgetCategorySerializer()})
 @api_view(['GET', 'POST'])
 def budget_category_list(request):
     if request.method == 'GET':
@@ -24,6 +28,9 @@ def budget_category_list(request):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@swagger_decorator(methods=['GET'], responses={200: BudgetCategorySerializer()})
+@swagger_decorator(methods=['PUT'], request_body=BudgetCategorySerializer, responses={200: BudgetCategorySerializer()})
+@swagger_decorator(methods=['DELETE'], responses={204: 'No Content'})
 @api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def budget_category_detail(request, pk):
@@ -31,7 +38,6 @@ def budget_category_detail(request, pk):
         category = BudgetCategory.objects.get(pk=pk)
     except BudgetCategory.DoesNotExist:
         return Response(status=404)
-
     if request.method == 'GET':
         serializer = BudgetCategorySerializer(category)
         return Response(serializer.data)
@@ -45,6 +51,8 @@ def budget_category_detail(request, pk):
         category.delete()
         return Response(status=204)
 
+@swagger_decorator(methods=['GET'], responses={200: TransactionSerializer(many=True)})
+@swagger_decorator(methods=['POST'], request_body=TransactionSerializer, responses={201: TransactionSerializer()})
 @api_view(['GET', 'POST'])
 @permission_classes([AllowAny])
 def transaction_list(request):
@@ -65,6 +73,9 @@ def transaction_list(request):
         else:
             return Response(status=401)
 
+@swagger_decorator(methods=['GET'], responses={200: TransactionSerializer()})
+@swagger_decorator(methods=['PUT'], request_body=TransactionSerializer, responses={200: TransactionSerializer()})
+@swagger_decorator(methods=['DELETE'], responses={204: 'No Content'})
 @api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def transaction_detail(request, pk):
@@ -72,7 +83,6 @@ def transaction_detail(request, pk):
         transaction = Transaction.objects.get(pk=pk, owner=request.user)
     except Transaction.DoesNotExist:
         return Response(status=404)
-
     if request.method == 'GET':
         serializer = TransactionSerializer(transaction)
         return Response(serializer.data)
@@ -82,8 +92,8 @@ def transaction_detail(request, pk):
             serializer.save()
             return Response(serializer.data)
         else:
-            logger.info("Serializer errors:", serializer.errors) 
-        return Response(serializer.errors, status=400)
+            logger.info("Serializer errors:", serializer.errors)
+            return Response(serializer.errors, status=400)
     elif request.method == 'DELETE':
         transaction.delete()
         return Response(status=204)
