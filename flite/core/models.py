@@ -1,6 +1,7 @@
 import uuid
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth.models import User
 from django.conf import settings
 
 class BaseModel(models.Model):
@@ -19,8 +20,9 @@ class BudgetCategory(models.Model):
     def __str__(self):
         return self.name
 
-class Transaction(BaseModel):
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='transactions')
+class Transaction(models.Model):
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,related_name='transactions')
+    # other fields...
     category = models.ForeignKey(BudgetCategory, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.TextField()

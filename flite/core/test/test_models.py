@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 from flite.core.models import BudgetCategory, Transaction
 from flite.users.models import User
@@ -18,3 +19,9 @@ class TestTransactionModel(TestCase):
         Transaction.objects.create(owner=self.user, category=self.category, amount=30.00, description='Test transaction 3')
 
         self.assertEqual(self.user.total_amount, 100.00)
+
+
+    def test_empty_description(self):
+        with self.assertRaises(ValidationError):
+            transaction = Transaction(owner=self.user, category=self.category, amount=10.00, description='')
+            transaction.full_clean()
