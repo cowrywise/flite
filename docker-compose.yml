@@ -71,6 +71,8 @@ services:
     command: celery flower
     environment:
       - CELERY_BROKER_URL=amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672//
+    ports:
+      - 5555:5555
     depends_on:
       - rabbitmq
     restart: always
