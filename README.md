@@ -66,9 +66,52 @@ The API documentation for Flite is generated using drf-yasg, a Swagger generatio
    docker-compose up
    ```
 
-2. Open your web browser and navigate to: http://0.0.0.0:8000/docs/
+2. Open your web browser and navigate to: `http://0.0.0.0:8000/docs/`
 
-   This will display the Swagger UI, where you can explore the available API endpoints, view request and response schemas, and interact with the API.
+   This will display the Redoc UI, where you can explore the available API endpoints, view request and response schemas, To interact with the API navigate to `http://0.0.0.0:8000/api/playground/` 
+   To see all the endpoints, create a superuser account and login to the admin, then refresh the docs to see the rest of the endpoints that are protected.
+
+### Available endpoints
+Sure! Here's a list of the available endpoints based on the provided code:
+
+1. Budget Category List:
+   - URL: `/budget_categories/`
+   - Methods:
+     - GET: Retrieve a list of budget categories for the authenticated user.
+     - POST: Create a new budget category for the authenticated user.
+
+2. Budget Category Detail:
+   - URL: `/budget_categories/<int:pk>/`
+   - Methods:
+     - GET: Retrieve details of a specific budget category.
+     - PUT: Update a specific budget category.
+     - DELETE: Delete a specific budget category.
+
+3. Transaction List:
+   - URL: `/transactions/`
+   - Methods:
+     - GET: Retrieve a list of transactions for the authenticated user.
+     - POST: Create a new transaction for the authenticated user.
+
+4. Transaction Detail:
+   - URL: `/transactions/<int:pk>/`
+   - Methods:
+     - GET: Retrieve details of a specific transaction.
+     - PUT: Update a specific transaction.
+     - DELETE: Delete a specific transaction.
+
+Note that these endpoints require authentication using token-based authentication. Users need to provide a valid token in the request headers to access these endpoints. For example
+```bash
+curl -X POST \
+  -H "Authorization: Token your_token_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+        "name": "Food",
+        "description": "Budget for groceries and dining out",
+        "max_spend": 500.00
+      }' \
+  http://localhost:8000/budget_categories/
+  ```
 
 ## Running Tests
 
