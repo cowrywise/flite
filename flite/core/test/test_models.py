@@ -1,5 +1,4 @@
 from django.test import TestCase
-from django.db.models import Sum
 from flite.core.models import BudgetCategory, Transaction
 from flite.users.models import User
 

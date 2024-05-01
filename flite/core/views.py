@@ -1,9 +1,14 @@
+import logging
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import BudgetCategory, Transaction
 from .serializers import BudgetCategorySerializer, TransactionSerializer
 from rest_framework.permissions import AllowAny
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+logger.addHandler(logging.StreamHandler())
+
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
@@ -72,13 +77,12 @@ def transaction_detail(request, pk):
         serializer = TransactionSerializer(transaction)
         return Response(serializer.data)
     elif request.method == 'PUT':
-        print("Request data:", request.data)  # Add this line
         serializer = TransactionSerializer(transaction, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         else:
-            print("Serializer errors:", serializer.errors)  # Add this line
+            logger.info("Serializer errors:", serializer.errors) 
         return Response(serializer.errors, status=400)
     elif request.method == 'DELETE':
         transaction.delete()

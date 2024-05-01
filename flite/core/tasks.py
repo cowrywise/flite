@@ -1,7 +1,7 @@
 from celery import shared_task
 from django.core.mail import send_mail
 from django.db.models import Sum
-from flite.core.models import Transaction, BudgetCategory  # Import models
+from flite.core.models import Transaction  # Import models
 from decimal import Decimal
 
 @shared_task

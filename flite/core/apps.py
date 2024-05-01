@@ -1,4 +1,3 @@
-from configurations import Configuration
 from django.apps import AppConfig
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -14,7 +13,6 @@ class CoreConfig(AppConfig):
 
         @receiver(post_save, sender=Transaction)
         def run_check_budget_threshold(sender, instance, **kwargs):
-            print("run_check_budget_threshold signal triggered") 
             logging.info("run_check_budget_threshold signal triggered")
             transaction.on_commit(lambda: check_budget_threshold.delay(instance.id))
             
