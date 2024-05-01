@@ -26,7 +26,7 @@ class Common(Configuration):
         'rest_framework',            # utilities for rest apis
         'rest_framework.authtoken',  # token authentication
         'django_filters',  
-      
+        'drf_yasg',
     
         # Your apps
         'flite.users',
