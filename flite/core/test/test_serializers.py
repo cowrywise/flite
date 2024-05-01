@@ -1,9 +1,8 @@
 from django.test import TestCase
 from nose.tools import ok_, eq_
-from .serializers import BudgetCategorySerializer, TransactionSerializer
-from .models import BudgetCategory, Transaction
-from django.contrib.auth.models import User
-
+from flite.core.serializers import BudgetCategorySerializer, TransactionSerializer
+from flite.core.models import BudgetCategory, Transaction
+from flite.users.models import User
 class TestBudgetCategorySerializer(TestCase):
     def setUp(self):
         self.category_data = {'name': 'Test Category', 'description': 'Test description', 'max_spend': 100.00}

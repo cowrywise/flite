@@ -1,4 +1,4 @@
-# Create your views here.
+# views.py
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -12,7 +12,6 @@ def budget_category_list(request):
         categories = BudgetCategory.objects.all()
         serializer = BudgetCategorySerializer(categories, many=True)
         return Response(serializer.data)
-
     elif request.method == 'POST':
         serializer = BudgetCategorySerializer(data=request.data)
         if serializer.is_valid():
@@ -31,18 +30,15 @@ def budget_category_detail(request, pk):
     if request.method == 'GET':
         serializer = BudgetCategorySerializer(category)
         return Response(serializer.data)
-
     elif request.method == 'PUT':
         serializer = BudgetCategorySerializer(category, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=400)
-
     elif request.method == 'DELETE':
         category.delete()
         return Response(status=204)
-
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
@@ -51,7 +47,6 @@ def transaction_list(request):
         transactions = Transaction.objects.filter(owner=request.user)
         serializer = TransactionSerializer(transactions, many=True)
         return Response(serializer.data)
-
     elif request.method == 'POST':
         serializer = TransactionSerializer(data=request.data)
         if serializer.is_valid():
@@ -70,14 +65,12 @@ def transaction_detail(request, pk):
     if request.method == 'GET':
         serializer = TransactionSerializer(transaction)
         return Response(serializer.data)
-
     elif request.method == 'PUT':
         serializer = TransactionSerializer(transaction, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=400)
-
     elif request.method == 'DELETE':
         transaction.delete()
         return Response(status=204)

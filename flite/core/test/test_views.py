@@ -1,9 +1,9 @@
 from django.test import TestCase, RequestFactory
 from rest_framework.test import APIRequestFactory,force_authenticate
 from rest_framework import status
-from django.contrib.auth.models import User
-from .views import budget_category_list, budget_category_detail, transaction_list, transaction_detail
-from core.models import BudgetCategory,Transaction
+from flite.users.models import User
+from flite.core.views import budget_category_list, budget_category_detail, transaction_list, transaction_detail
+from flite.core.models import BudgetCategory,Transaction
 class TestBudgetCategoryViews(TestCase):
     def setUp(self):
         self.factory = APIRequestFactory()
@@ -92,3 +92,22 @@ class TestTransactionViews(TestCase):
         response = transaction_detail(request, pk=self.transaction.pk)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Transaction.objects.count(), 0)
+    def test_budget_category_list_post_with_invalid_data(self):
+        data = {'name': '', 'description': 'New description', 'max_spend': 'invalid'}
+        request = self.factory.post('/budget-categories/', data, format='json')
+        force_authenticate(request, user=self.user)
+        response = budget_category_list(request)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+    def test_transaction_detail_other_user(self):
+        # Create another user and a transaction for that user
+        other_user = User.objects.create_user('otheruser', 'other@example.com', 'password')
+        other_transaction = Transaction.objects.create(owner=other_user, category=self.category, amount=20.00, description='Other transaction')
+
+        request = self.factory.get('/transactions/{}/'.format(other_transaction.pk), format='json')
+        force_authenticate(request, user=self.user)
+        response = transaction_detail(request, pk=other_transaction.pk)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+    def test_transaction_list_unauthorized(self):
+        request = self.factory.get('/transactions/', format='json')
+        response = transaction_list(request)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

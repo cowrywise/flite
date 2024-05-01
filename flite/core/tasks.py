@@ -1,8 +1,9 @@
 from celery import shared_task
 from django.core.mail import send_mail
 from django.db.models import Sum
-from .models import Transaction, BudgetCategory  # Import your Transaction and BudgetCategory models
+from flite.core.models import Transaction, BudgetCategory  # Import models
 from decimal import Decimal
+
 @shared_task
 def check_budget_threshold(transaction_id):
     transaction = Transaction.objects.get(id=transaction_id)
