@@ -1,4 +1,3 @@
-# serializers.py
 from rest_framework import serializers
 from .models import BudgetCategory, Transaction
 
@@ -8,7 +7,7 @@ class BudgetCategorySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'description', 'max_spend']
 
 class TransactionSerializer(serializers.ModelSerializer):
-    amount = serializers.FloatField()  # Ensure the amount field is serialized as a float
+    amount = serializers.DecimalField(max_digits=10, decimal_places=2)  # Use DecimalField instead of FloatField
 
     class Meta:
         model = Transaction

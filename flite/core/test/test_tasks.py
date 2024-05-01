@@ -37,7 +37,17 @@ class TestCheckBudgetThresholdTask(TestCase):
         self.assertRegex(mail.outbox[0].body, r'Your spending for Test Category has reached 80.00')
 
     def test_check_budget_threshold_multiple_categories(self):
-        # Create multiple budget categories and test emails for each
+        transaction = Transaction.objects.create(owner=self.user, category=self.category, amount=Decimal('50.00'))
         category2 = BudgetCategory.objects.create(name='Test Category 2', description='Test description 2', max_spend=200.00)
         Transaction.objects.create(owner=self.user, category=self.category, amount=Decimal('60.00'), description='Test transaction')
-        transaction = Transaction.objects.create(owner=self.user, category=self.category, amount=Decimal)
+
+    def test_check_budget_threshold_no_transactions(self):
+        empty_category = BudgetCategory.objects.create(name='Empty Category', description='Empty description', max_spend=100.00)
+        transaction = Transaction.objects.create(owner=self.user, category=empty_category, amount=10.00, description='Test transaction')
+        check_budget_threshold(transaction.id)
+        self.assertEqual(len(mail.outbox), 0)  # Assert no emails sent
+    def test_check_budget_threshold_below_fifty_percent(self):
+        Transaction.objects.create(owner=self.user, category=self.category, amount=20.00, description='Test transaction')
+        transaction = Transaction.objects.create(owner=self.user, category=self.category, amount=10.00, description='Test transaction')
+        check_budget_threshold(transaction.id)
+        self.assertEqual(len(mail.outbox), 0)  # Assert no emails sent

@@ -8,7 +8,7 @@ from rest_framework.authtoken.models import Token
 from flite.core.models import BaseModel
 from phonenumber_field.modelfields import PhoneNumberField
 from django.utils import timezone
-
+from django.db.models import Sum
 
 class User(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -16,6 +16,9 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
+    @property
+    def total_amount(self):
+        return self.transactions.aggregate(total=Sum('amount'))['total'] or 0
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_auth_token(sender, instance=None, created=False, **kwargs):

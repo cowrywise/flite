@@ -3,13 +3,6 @@ from django.db.models import Sum
 from flite.core.models import BudgetCategory, Transaction
 from flite.users.models import User
 
-class User(models.Model):
-    # your fields here
-
-    @property
-    def total_amount(self):
-        return self.transactions.aggregate(total=Sum('amount'))['total']
-
 class TestBudgetCategoryModel(TestCase):
     def test_str_representation(self):
         category = BudgetCategory(name='Test Category', description='Test description', max_spend=100.00)

@@ -19,9 +19,14 @@ class TestBudgetCategorySerializer(TestCase):
 
 class TestTransactionSerializer(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user('testuser', 'test@example.com', 'password')
+        self.user = User.objects.create(username='testuser')
         self.category = BudgetCategory.objects.create(name='Test Category', description='Test description', max_spend=100.00)
-        self.transaction_data = {'category': self.category.id, 'amount': 50.00, 'description': 'Test transaction', 'owner': self.user.id}
+        self.transaction_data = {
+            'owner': self.user,
+            'category': self.category,
+            'amount': 50.00,
+            'description': 'Test transaction'
+        }
         self.transaction = Transaction.objects.create(**self.transaction_data)
         self.serializer = TransactionSerializer(instance=self.transaction)
 
@@ -31,4 +36,4 @@ class TestTransactionSerializer(TestCase):
 
     def test_amount_field_content(self):
         data = self.serializer.data
-        eq_(data['amount'], str(self.transaction_data['amount']))
+        eq_(float(data['amount']), self.transaction_data['amount'])
