@@ -6,6 +6,6 @@ omit =
     */admin.py,
     *urls*,
     manage.py,
-    flite/config/*,
+    ./flite/config/*,
     flite/wsgi.py,
     */__init__.py
