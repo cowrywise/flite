@@ -9,24 +9,24 @@ services:
     container_name: postgres
     restart: always
     environment:
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: flite
-      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
     ports:
       - "5432:5432"
   rabbitmq:
     image: "rabbitmq:3-management"
     container_name: rabbitmq
     environment:
-      - RABBITMQ_DEFAULT_USER=guest
-      - RABBITMQ_DEFAULT_PASS=guest
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
     ports:
       - "5672:5672"
       - "15672:15672"
   django:
     restart: always
     environment:
-      - DJANGO_SECRET_KEY=local
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
     image: django
     container_name: django
     platform: linux/arm64/v8
@@ -43,10 +43,10 @@ services:
       - postgres
   celery-worker:
     build: .
-    command: celery -A flite worker -l info  # Specify the Celery application here
+    command: celery -A flite worker -l info
     environment:
-      - DJANGO_SETTINGS_MODULE=flite.config  # Replace "myproject" with your project name
-      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672/  # RabbitMQ connection details
+      - DJANGO_SETTINGS_MODULE=flite.config
+      - CELERY_BROKER_URL=amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/
     volumes:
       - ./:/code
     depends_on:
@@ -70,7 +70,7 @@ services:
     image: mher/flower
     command: celery flower
     environment:
-      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_BROKER_URL=amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672//
     depends_on:
       - rabbitmq
     restart: always
