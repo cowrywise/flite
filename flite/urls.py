@@ -15,11 +15,11 @@ router.register(r'users', UserCreateViewSet)
 router.register(r'phone', SendNewPhonenumberVerifyViewSet)
 schema_view = get_schema_view(
     openapi.Info(
-        title="Beep API",
+        title="Flite API",
         default_version="v1",
-        description="API for Beep",
+        description="API for Flite",
         terms_of_service="https://www.google.com/policies/terms/",
-        contact=openapi.Contact(email="contact@beep.africa"),
+        contact=openapi.Contact(email="flite@cowrywise.com"),
     ),
     permission_classes=(permissions.AllowAny,),
 )
