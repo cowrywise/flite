@@ -11,7 +11,7 @@ class TestBudgetCategoryModel(TestCase):
 class TestTransactionModel(TestCase):
     def setUp(self):
         self.user = User.objects.create_user('testuser', 'test@example.com', 'password')
-        self.category = BudgetCategory.objects.create(name='Test Category', description='Test description', max_spend=100.00)
+        self.category = BudgetCategory.objects.create(name='Test Category', description='Test description', max_spend=100.00, owner=self.user)
 
     def test_total_amount(self):
         Transaction.objects.create(owner=self.user, category=self.category, amount=50.00, description='Test transaction 1')
