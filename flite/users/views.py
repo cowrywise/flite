@@ -4,7 +4,6 @@ from rest_framework.permissions import AllowAny
 from .models import User, NewUserPhoneVerification
 from .permissions import IsUserOrReadOnly
 from .serializers import CreateUserSerializer, UserSerializer, SendNewPhonenumberSerializer
-from rest_framework.views import APIView
 from . import utils
 
 class UserViewSet(mixins.RetrieveModelMixin,

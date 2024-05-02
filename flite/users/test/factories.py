@@ -1,5 +1,5 @@
 import factory
-
+from django.utils import timezone
 
 class UserFactory(factory.django.DjangoModelFactory):
 
@@ -14,5 +14,6 @@ class UserFactory(factory.django.DjangoModelFactory):
     email = factory.Faker('email')
     first_name = factory.Faker('first_name')
     last_name = factory.Faker('last_name')
+    last_login =timezone.now() 
     is_active = True
     is_staff = False
